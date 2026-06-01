@@ -6,7 +6,7 @@
     color:chartreuse;
     font-family: 'Arial', sans-serif;
 }
-a{
+.introduction{
     display: block;
     width: 200px;
     margin: 20px auto;
@@ -30,3 +30,15 @@ a{
     color:dodgerblue;
     margin-bottom: 10px;
 };
+.navigation{
+    background-color : skyblue;
+    padding : 20px;
+    color:white;
+    border-radius : 5px;
+    display : block;
+}
+a{
+    color:lightslategray;
+    list-style: none;
+    text-decoration-line: none;
+}
