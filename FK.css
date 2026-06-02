@@ -33,12 +33,18 @@
 .navigation{
     background-color : skyblue;
     padding : 20px;
-    color:white;
-    border-radius : 5px;
-    display : block;
+    gap: 20px;
+    display : flex; /*내비게이션바 핵심*/
+    
 }
-a{
-    color:lightslategray;
-    list-style: none;
-    text-decoration-line: none;
+.navigation a {
+
+    color:mediumseagreen;
+
+    text-decoration: none;
+
+    font-weight: bold;
+
+    padding-left: 30px; /*내비게이션 바의 글자들 간격*/
+
 }
