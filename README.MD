@@ -159,3 +159,4 @@ VS Code
 - git commit -m "추가한것들" -> 커밋
 - git push -u origin main -> 푸시(github에 전달) 
 - main은 바꿀 수 있음 feature/이름 하면 브런치 생성.
+- 처음 push만 잘하면 그 다음부터는 git push만 하면 알아서 해줌.

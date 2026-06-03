@@ -29,13 +29,12 @@
     font-size: 24px;
     color:dodgerblue;
     margin-bottom: 10px;
-};
+}
 .navigation{
-    background-color : skyblue;
+    background-color :lightsteelblue;
     padding : 20px;
     gap: 20px;
     display : flex; /*내비게이션바 핵심*/
-    
 }
 .navigation a {
 
@@ -47,4 +46,4 @@
 
     padding-left: 30px; /*내비게이션 바의 글자들 간격*/
 
-}
+};
