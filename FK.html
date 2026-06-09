@@ -9,13 +9,14 @@
 <body>
 
     <h2 class="encounter">FeedbacKing</h2>
-    <div class="navigation">
-        <button class="active" href="#" class="Spech_Main_Home">발표 광장</a>
-        <button class="spech_" href="#" >발표 등록하기</a>
 
-        <button href="#" onclick="">피드백 참여</button>
-        <button href="FK_introduce.html" onclick="">Introduction</button>
-        <button href="FK_MyPage.html">마이페이지</button>
+    <div class="navigation">
+        <button class="active" onclick="Here" class="Spech_Main_Home">발표 광장</button>
+        <button class="Spech_Register" onclick="Register_Spech()" >발표 등록하기</button>
+
+        <button  onclick="GoToPage('FK_GiveFeedback.html')">피드백 참여</button>
+        <button  onclick="GoToPage('FK_introduce.html')">Introduction</button>
+        <button onclick="GoToPage('FK_MyPage.html')">마이페이지</button>
     </div>
     <hr>
     <div class="speches">안녕하세요 차희망 연설자 입니다.</div>

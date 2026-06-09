@@ -7,6 +7,9 @@
     font-family: 'Arial', sans-serif;
     
 }
+.user{
+    display:flex;
+}
 .introduction{
     display: block;
     width: 200px;
@@ -45,7 +48,7 @@
 
     border-radius: 0;
 
-    background-color: rgb(165, 249, 249)
+    background-color: rgb(165, 249, 249);
 
 };
 .active {
@@ -55,7 +58,7 @@
 
     border-radius: 0;
 
-    background-color: rgb(85, 151, 151)
+    background-color: rgb(85, 151, 151);
 }
 
 .speches{
