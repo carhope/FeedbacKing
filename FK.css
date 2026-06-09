@@ -5,6 +5,7 @@
     margin-top:30px;
     color:chartreuse;
     font-family: 'Arial', sans-serif;
+    
 }
 .introduction{
     display: block;
@@ -31,19 +32,39 @@
     margin-bottom: 10px;
 }
 .navigation{
-    background-color :lightsteelblue;
+    background-color :rgb(56, 190, 83);
     padding : 20px;
     gap: 20px;
     display : flex; /*내비게이션바 핵심*/
 }
-.navigation a {
+.navigation button {
 
-    color:mediumseagreen;
-
-    text-decoration: none;
+    color:rgb(25, 38, 153);
 
     font-weight: bold;
 
-    padding-left: 30px; /*내비게이션 바의 글자들 간격*/
+    border-radius: 0;
+
+    background-color: rgb(165, 249, 249)
 
 };
+.active {
+    color:rgb(70, 79, 163);
+
+    font-weight: bold;
+
+    border-radius: 0;
+
+    background-color: rgb(85, 151, 151)
+}
+
+.speches{
+    width: 500px;
+    height: 100px;
+    background-color: rgb(36, 210, 65);
+    border-radius: 20px;
+    border-style: solid;
+
+    font-style: normal;
+    text-align: center;
+}
