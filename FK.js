@@ -110,3 +110,79 @@ window.onload = function() {
     renderSpeeches();
 };
 //발표 등록 -----------
+// ... 기존 1단계 자바스크립트 코드 아래에 수정 및 추가 ...
+
+// [기존 함수 업그레이드]: 인자로 리스트를 넘겨받을 수 있게 수정합니다.
+// 만약 인자(list)가 없으면 기본값으로 전체 speechList를 사용합니다.
+function renderSpeeches(list = speechList) {
+    const container = document.getElementById('spechesContainer');
+    container.innerHTML = ''; 
+
+    // 검색 결과나 데이터가 아예 없을 때
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div class="speches" style="text-align:center; color:#9ca3af;">
+                조건에 맞는 발표 데이터가 없습니다.
+            </div>`;
+        return;
+    }
+
+    // 최신글 우선 정렬
+    const displayList = [...list].reverse();
+
+    displayList.forEach(speech => {
+        const card = document.createElement('div');
+        card.className = 'speches';
+        
+        card.innerHTML = `
+            <h3>${speech.title}</h3>
+            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">
+                <strong>발표자:</strong> ${speech.speaker}
+            </p>
+            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">
+                <strong>장소:</strong> ${speech.location} | <strong>일시:</strong> ${speech.dateTime.replace('T', ' ')}
+            </p>
+            <p style="margin: 15px 0 0 0; color: #374151;">${speech.content}</p>
+            <button onclick="GoToPage('FK_GiveFeedback.html?id=${speech.id}')" style="margin-top:15px; background-color:#111827; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
+                피드백 참여
+            </button>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// [신규 추가] 2. 검색 실행 함수
+function searchSpeeches() {
+    // 사용자가 입력한 값 가져오기 (대소문자 구분을 없애기 위해 trim으로 공백만 제거)
+    const sTitle = document.getElementById('searchTitle').value.trim();
+    const sSpeaker = document.getElementById('searchSpeaker').value.trim();
+    const sLocation = document.getElementById('searchLocation').value.trim();
+    const sDate = document.getElementById('searchDate').value.trim();
+
+    // 4가지 조건 중 하나라도 입력된 게 있다면 필터링 시작!
+    const filteredList = speechList.filter(speech => {
+        // 각 항목별로 입력값이 있을 때만 포함(includes) 검사를 하고, 빈칸이면 무조건 pass(true) 시킵니다.
+        const matchTitle = sTitle ? speech.title.includes(sTitle) : true;
+        const matchSpeaker = sSpeaker ? speech.speaker.includes(sSpeaker) : true;
+        const matchLocation = sLocation ? speech.location.includes(sLocation) : true;
+        const matchDate = sDate ? speech.dateTime.includes(sDate) : true;
+
+        // 4가지 조건을 모두 만족(AND)하는 데이터만 남깁니다.
+        return matchTitle && matchSpeaker && matchLocation && matchDate;
+    });
+
+    // 필터링된 결과만 가지고 화면을 새로 그립니다!
+    renderSpeeches(filteredList);
+}
+
+// [신규 추가] 3. 검색 초기화 함수
+function resetSearch() {
+    // 모든 인풋창 비우기
+    document.getElementById('searchTitle').value = '';
+    document.getElementById('searchSpeaker').value = '';
+    document.getElementById('searchLocation').value = '';
+    document.getElementById('searchDate').value = '';
+
+    // 인자 없이 실행하면 전체 리스트(speechList)가 다시 깔끔하게 그려집니다.
+    renderSpeeches();
+}

@@ -261,7 +261,7 @@ hr {
 .btn-reset:hover {
     background-color: #e5e7eb;
 }
-/*검색 ---- --------------------
+/*검색 ---- --------------------*/
 
 /* 기존 안 쓰는 스타일들 유지 */
 .user { display: flex; }
