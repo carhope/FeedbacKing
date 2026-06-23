@@ -142,14 +142,25 @@ hr {
 }
 
 /* 모달 내부 입력창 공통 */
-.modal-content input, .modal-content textarea {
+/* 모달 내부 입력창 공통 (납작해짐 해결 버전!) */
+.modal-content input, 
+.modal-content textarea {
     width: 100%;
-    padding: 10px;
+    height: 44px !important;             /* 1. 높이를 44px로 확실하게 고정! */
+    padding: 10px 14px !important;       /* 2. 안쪽 여백을 위아래 10px, 좌우 14px로 조절 */
+    box-sizing: border-box !important;   /* 3. 높이에 패딩이 포함되도록 설정 (찌그러짐 방지 핵심!) */
     border: 1px solid #d1d5db;
     border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 14px;
+    font-size: 15px;          /* 글자 크기도 살짝 키웠습니다 */
     background-color: #f9fafb;
+    margin-bottom: 4px;       /* 입력창끼리 너무 붙지 않게 약간의 간격 추가 */
+}
+
+/* 텍스트 영역(내용 입력칸)은 여러 줄을 써야 하므로 높이를 auto로 풀어줍니다 */
+.modal-content textarea {
+    height: auto;             
+    min-height: 100px;        /* 최소 높이를 100px로 세팅 */
+    resize: none;             /* 사용자가 마음대로 창 크기 못 늘리게 고정 */
 }
 
 .modal-content input:focus, .modal-content textarea:focus {
