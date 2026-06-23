@@ -3,39 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FeedbacKing</title>
+    <title>FeedbacKing - 피드백 센터</title>
     <link rel="stylesheet" type="text/css" href="FK.css">
-    <link rel="stylesheet" type="text/js" href="FK_js">
+    <style>
+        .feedback-layout { max-width: 650px; margin: 40px auto; padding: 0 20px; }
+        .info-card { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .auth-zone { background: #111827; color: white; padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .video-box { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 15px; background: #000; }
+        .video-box iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
+        .feedback-form-area { display: none; background: white; padding: 30px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); animation: slideDown 0.4s ease-out; }
+        .rating-stars { display: flex; gap: 10px; font-size: 36px; margin: 20px 0; cursor: pointer; color: #e5e7eb; justify-content: center; }
+        .rating-stars .star { transition: transform 0.1s, color 0.1s; }
+        .rating-stars .star:hover { transform: scale(1.2); }
+        .rating-stars .star.active { color: #f59e0b !important ;}
+        .ai-report { display: none; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 25px; border-radius: 16px; margin-top: 25px; color: #166534; animation: fadeIn 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </head>
 <body>
 
-    <h2 class="encounter">FeedbacKing</h2>
-
-    <div class="navigation">
-        <button onclick="GoToPage('FK.html')">발표 광장</button>
-        <button class="Spech_Register" onclick="Register_Spech()" >발표 등록하기</button>
-
-        <button  onclick="GoToPage('FK_GiveFeedback.html')">피드백 참여</button>
-        <button  onclick="GoToPage('FK_introduce.html')">Introduction</button>
-        <button id="hover">마이페이지</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 30px; background:#111827; color:white;">
+        <h3 style="margin:0; font-size:18px; color:#10b981;">📝 FeedbacKing 청중 몰입 모드</h3>
+        <button onclick="safeExit()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;">중단하고 나가기</button>
     </div>
-    <hr>
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <h3>새 발표 등록하기</h3>
-            <input type="text" id="regTitle" placeholder="발표 제목">
-            <input type="text" id="regSpeaker" placeholder="발표자 이름">
-            <input type="text" id="regLocation" placeholder="발표 장소">
-            <input type="datetime-local" id="regDateTime" placeholder="발표 일시">
-            <textarea id="regContent" rows="4" placeholder="발표 내용을 입력하세요"></textarea>
+
+    <div class="feedback-layout">
+        <div id="speechInfoCard" class="info-card"></div>
+        <div id="authGate" class="auth-zone" style="display: none;"></div>
+
+        <div id="feedbackForm" class="feedback-form-area">
+            <h3 style="margin-top:0; color:#111827; text-align:center;">청중 피드백 작성</h3>
+            <p style="text-align:center; color:#6b7280; font-size:14px; margin-bottom:20px;">당신의 한마디가 연설자에게 큰 성장의 밑거름이 됩니다.</p>
             
-            <div class="modal-buttons">
-                <button class="btn-submit" onclick="submitSpeech()">게시하기</button>
-                <button class="btn-close" onclick="closeModal()">닫기</button>
+            <div class="rating-stars" id="starContainer">
+                <span class="star" data-score="1">★</span>
+                <span class="star" data-score="2">★</span>
+                <span class="star" data-score="3">★</span>
+                <span class="star" data-score="4">★</span>
+                <span class="star" data-score="5">★</span>
+            </div>
+
+            <textarea id="feedbackComment" rows="6" placeholder="발표 내용의 전달력, 자료의 가독성, 아쉬웠던 점 등을 정성껏 기재해 주세요." style="width:100%; padding:15px; border-radius:8px; border:1px solid #d1d5db; font-size:15px; box-sizing:border-box; background:#f9fafb; resize:none;"></textarea>
+            
+            <button class="btn-submit" onclick="processAIFeedback()" style="width:100%; height:50px; font-size:16px; font-weight:bold; border-radius:8px; border:none; margin-top:20px; cursor:pointer; background:#10b981; color:white;">
+                피드백 분석 리포트 받아보기
+            </button>
+
+            <div id="aiReportSection" class="ai-report">
+                <h4 style="margin:0 0 10px 0; font-size:18px; display:flex; align-items:center; gap:6px;">🤖 AI 피드백 문맥 분석 결과</h4>
+                <p id="aiSummaryText" style="font-size:15px; line-height:1.6; font-weight:500; color:#14532d;"></p>
+                <div id="aiMetric" style="margin-top:15px; font-size:13px; font-weight:bold; background:#dcfce7; padding:10px; border-radius:8px; display:inline-block;"></div>
+                <div style="margin-top:20px; text-align:right;">
+                    <button onclick="window.location.href='FK.html'" style="background:#111827; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">광장 메인으로 가기</button>
+                </div>
             </div>
         </div>
     </div>
 
-<script src="FK.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const currentId = Number(params.get('id'));
+        const speechDataList = JSON.parse(localStorage.getItem('speechList')) || [];
+        const speech = speechDataList.find(item => item.id === currentId);
+        const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+        // 방어막 로직 및 소유권 체크
+        if(!speech) {
+            alert('유효하지 않은 고유 발표 ID 코드입니다.');
+            window.location.href = 'FK.html';
+        }
+        if(!currentUser) {
+            alert('로그인 세션이 만료되었습니다. 메인화면에서 로그인해 주세요.');
+            window.location.href = 'FK.html';
+        }
+        if(speech.owner === currentUser.id) {
+            alert('❌ 방어 작동: 본인이 개설한 무대에는 피드백 평가단으로 참여할 수 없습니다.');
+            window.location.href = 'FK.html';
+        }
+
+        // 유저 UX 가이드라인 이탈 제어 시스템
+        function safeExit() {
+            if(confirm("🚨 주의: 피드백 작성을 중단하시겠습니까?\n현재 입력창에 기재 중이던 정성 가득한 문장과 데이터가 모두 소멸됩니다.")) {
+                window.location.href = 'FK.html';
+            }
+        }
+
+        // 상단 정보 바 기본 세팅
+        document.getElementById('speechInfoCard').innerHTML = `
+            <span style="font-size:12px; font-weight:bold; color:#10b981;">SPEECH INFO</span>
+            <h2 style="margin:5px 0 12px 0; font-size:24px; color:#111827;">${speech.title}</h2>
+            <div style="font-size:14px; color:#4b5563; display:flex; flex-direction:column; gap:4px;">
+                <div>👤 <strong>발표자:</strong> ${speech.speaker}</div>
+                <div>📍 <strong>장소:</strong> ${speech.location} &nbsp;|&nbsp; 🗓️ <strong>일시:</strong> ${speech.dateTime.replace('T', ' ')}</div>
+            </div>
+        `;
+
+        const gate = document.getElementById('authGate');
+        const form = document.getElementById('feedbackForm');
+
+        if (speech.authType === 'password') {
+            gate.style.display = 'block';
+            gate.innerHTML = `
+                <h3 style="margin-top:0;">🔒 현장 입장 암호 인증</h3>
+                <p style="font-size:13px; color:#9ca3af; margin-bottom:20px;">연설자가 현장에서 공개한 4자리 패스워드를 입력하세요.</p>
+                <div style="display:flex; gap:8px; justify-content:center; max-width:280px; margin:0 auto;">
+                    <input type="password" id="inputPass" placeholder="••••" maxlength="4" style="text-align:center; font-size:22px; height:44px; flex:1; border-radius:8px; border:none; color:#111827; letter-spacing:4px;">
+                    <button onclick="checkPassword()" style="background:#10b981; border:none; color:white; padding:0 15px; border-radius:8px; font-weight:bold; cursor:pointer;">확인</button>
+                </div>
+            `;
+        } else if (speech.authType === 'quiz') {
+            gate.style.display = 'block';
+            gate.style.textAlign = 'left';
+            gate.style.background = '#1e293b';
+
+            let vId = "";
+            if(speech.youtube.includes('v=')) vId = speech.youtube.split('v=')[1].split('&')[0];
+            else if(speech.youtube.includes('youtu.be/')) vId = speech.youtube.split('youtu.be/')[1].split('?')[0];
+
+            gate.innerHTML = `
+                <div class="video-box">
+                    <iframe src="https://www.youtube.com/embed/${vId}" allowfullscreen></iframe>
+                </div>
+                <div style="padding:10px 15px 5px 15px;">
+                    <h4 style="margin:0 0 5px 0; color:#10b981;">📺 시청 인증 퀴즈</h4>
+                    <p style="margin:0 0 15px 0; font-size:14px; color:#cbd5e1;"><strong>Q. ${speech.quizQuestion}</strong></p>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="inputAnswer" placeholder="정답을 입력하세요" style="height:40px; flex:1; border-radius:6px; border:none; padding:0 12px; font-size:14px; color:#111827;">
+                        <button onclick="checkQuiz()" style="background:#10b981; border:none; color:white; padding:0 18px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">제출</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            form.style.display = 'block';
+        }
+
+        function checkPassword() {
+            const val = document.getElementById('inputPass').value.trim();
+            if(val === speech.password) {
+                alert('🔓 패스워드가 확인되었습니다! 피드백 작성이 활성화됩니다.');
+                gate.style.display = 'none';
+                form.style.display = 'block';
+            } else {
+                alert('❌ 올바르지 않은 암호입니다. 다시 확인해 주세요.');
+            }
+        }
+
+        function checkQuiz() {
+            const userAns = document.getElementById('inputAnswer').value.trim().toLowerCase().replace(/\s+/g, '');
+            const targetAns = speech.quizAnswer.trim().toLowerCase().replace(/\s+/g, '');
+
+            if(userAns === targetAns) {
+                alert('🎉 퀴즈 정답입니다! 피드백 작성란이 개방되었습니다.');
+                gate.style.display = 'none';
+                form.style.display = 'block';
+            } else {
+                alert('❌ 정답이 아닙니다! 영상을 좀 더 집중해서 시청해 보시는 건 어떨까요?');
+            }
+        }
+
+        const stars = document.querySelectorAll('.star');
+        let selectedScore = 0;
+
+        stars.forEach(star => {
+            star.addEventListener('mouseover', () => fillStars(Number(star.dataset.score)));
+            star.addEventListener('mouseleave', () => fillStars(selectedScore));
+            star.addEventListener('click', () => {
+                selectedScore = Number(star.dataset.score);
+                fillStars(selectedScore);
+            });
+        });
+
+        function fillStars(score) {
+            stars.forEach(s => {
+                if(Number(s.dataset.score) <= score) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        }
+
+        function processAIFeedback() {
+            const text = document.getElementById('feedbackComment').value.trim();
+            if(selectedScore === 0) { alert('발표의 종합 별점을 매겨주세요!'); return; }
+            if(!text) { alert('리포트 분석을 위한 피드백 텍스트를 적어주세요!'); return; }
+
+            // [추가 데이터 연동] 영구 저장소에 피드백 내역 적재
+            let globalFeedbackList = JSON.parse(localStorage.getItem('globalFeedbackList')) || [];
+            globalFeedbackList.push({
+                speechId: currentId,
+                reviewer: currentUser.id,
+                score: selectedScore,
+                comment: text,
+                timestamp: Date.now()
+            });
+            localStorage.setItem('globalFeedbackList', JSON.stringify(globalFeedbackList));
+
+            let aiReportText = "";
+            if(selectedScore >= 4) {
+                aiReportText = `청중은 본 연설에 대해 대단히 매료되었습니다. "${text.substring(0, 18)}..."의 서술 분석 결과, 스피치의 가시성과 내용의 유익성에 높은 가중치 점수가 부여되었습니다. 전달 속도와 스크립트 구성이 매끄러운 프로 수준의 무대였다고 평가됩니다.`;
+            } else if (selectedScore === 3) {
+                aiReportText = `본 발표는 무난한 정보성 전달을 완수했으나 임팩트가 다소 평이했다는 결과 데이터가 산출되었습니다. "${text.substring(0, 18)}..." 피드백 기반 파싱 결과, 핵심 주제부의 연출적 보완과 청중 흡입력을 높이기 위한 제스처/시각 템플릿의 밸런스 조정이 요구됩니다.`;
+            } else {
+                aiReportText = `구조 전반에 걸친 피드백 개선 루프 회전이 권장됩니다. "${text.substring(0, 18)}..." 맥락 분석 결과, 청중이 메시지의 유기적 인과 관계를 확립하는 데 어려움을 겪었을 확률이 농후합니다. 텍스트 정보의 밀도를 줄이고 발화 연습의 물리적 스케일업을 권장합니다.`;
+            }
+
+            document.getElementById('aiSummaryText').innerText = aiReportText;
+            document.getElementById('aiMetric').innerText = `📊 분석 스코어: ${'★'.repeat(selectedScore)} (${selectedScore}.0 / 5.0)`;
+            document.getElementById('aiReportSection').style.display = 'block';
+            document.getElementById('aiReportSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
 </body>
 </html>

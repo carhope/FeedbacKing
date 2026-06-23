@@ -274,6 +274,25 @@ hr {
 }
 /*검색 ---- --------------------*/
 
+
+/* 드롭다운 셀렉트 박스 포커싱 */
+#regAuthType:focus {
+    outline: none;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* 별점 활성화 시 프리미엄 오렌지 골드 필터링 */
+.rating-stars .star.active {
+    color: #f59e0b !important;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+/* 퀴즈 / 암호 입력 폼 유동성 확보 */
+#authQuizFields, #authPasswordFields {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
 /* 기존 안 쓰는 스타일들 유지 */
 .user { display: flex; }
 .introduction { display: block; width: 200px; margin: 20px auto; padding: 10px; background-color: #4CAF50; color: white; text-align: center; text-decoration: none; font-size: 18px; border-radius: 5px; }

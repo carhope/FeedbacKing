@@ -8,17 +8,21 @@
 </head>
 <body>
 
-    <h2 class="encounter">FeedbacKing</h2>
+    <h2 class="encounter" onclick="window.location.reload();" style="cursor:pointer;">FeedbacKing</h2>
 
-    <div class="navigation">
+    <div class="navigation" style="display: flex; align-items: center; gap: 10px;">
         <button class="active Spech_Main_Home" onclick="GoToPage('FK.html')">발표 광장</button>
-        <button class="Spech_Register" onclick="Register_Spech()">발표 등록하기</button>
-
-        <button onclick="GoToPage('FK_GiveFeedback.html')">피드백 참여</button>
+        <button class="Spech_Register" onclick="checkLoginAndRegister()">발표 등록하기</button>
         <button onclick="GoToPage('FK_introduce.html')">Introduction</button>
         <button onclick="GoToPage('FK_MyPage.html')">마이페이지</button>
         
+        <div id="authMenu" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+            <span id="welcomeMsg" style="font-size: 14px; font-weight: bold; color: #10b981;"></span>
+            <button id="btnLogin" onclick="promptLogin()" style="background: #111827; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">로그인</button>
+            <button id="btnLogout" onclick="logout()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: none;">로그아웃</button>
+        </div>
     </div>
+
     <div id="searchBar">
         <input type="text" id="searchTitle" placeholder="제목 검색">
         <input type="text" id="searchSpeaker" placeholder="발표자 검색">
@@ -29,8 +33,9 @@
             <button class="btn-search" onclick="searchSpeeches()">검색</button>
             <button class="btn-reset" onclick="resetSearch()">초기화</button>
         </div>
-    <div id="spechesContainer">
-        </div>
+    </div>
+
+    <div id="spechesContainer"></div>
 
     <div id="registerModal" class="modal">
         <div class="modal-content">
@@ -38,8 +43,26 @@
             <input type="text" id="regTitle" placeholder="발표 제목">
             <input type="text" id="regSpeaker" placeholder="발표자 이름">
             <input type="text" id="regLocation" placeholder="발표 장소">
-            <input type="datetime-local" id="regDateTime" placeholder="발표 일시">
-            <textarea id="regContent" rows="4" placeholder="발표 내용을 입력하세요"></textarea>
+            <input type="datetime-local" id="regDateTime">
+            
+            <label style="font-size: 13px; font-weight: bold; color: #4b5563; margin-top: 5px;">피드백 인증 방식</label>
+            <select id="regAuthType" onchange="toggleAuthFields()" style="width: 100%; height: 44px; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: 600;">
+                <option value="none">🔓 인증 없음 (자유롭게 참여)</option>
+                <option value="quiz">📺 영상 퀴즈 인증 (온라인 청중용)</option>
+                <option value="password">🔒 입장 암호 인증 (오프라인 현장용)</option>
+            </select>
+
+            <div id="authQuizFields" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <input type="text" id="regYoutube" placeholder="유튜브 영상 링크 (예: https://youtu.be/...)">
+                <input type="text" id="regQuizQuestion" placeholder="청중이 맞출 퀴즈 질문 (예: 마지막 단어는?)">
+                <input type="text" id="regQuizAnswer" placeholder="퀴즈 정답">
+            </div>
+
+            <div id="authPasswordFields" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <input type="password" id="regPassword" placeholder="피드백 입장 암호 (숫자 4자리)" maxlength="4">
+            </div>
+            
+            <textarea id="regContent" rows="4" placeholder="발표 내용을 입력하세요" style="margin-top: 10px;"></textarea>
             
             <div class="modal-buttons">
                 <button class="btn-submit" onclick="submitSpeech()">게시하기</button>

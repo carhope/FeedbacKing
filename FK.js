@@ -1,188 +1,238 @@
-const loginBth = document.querySelector('.login-bth');
-function isLogin(){
-    window.location.href='../html/FK_login.html'
-};
-
-function GoToPage(pageURL){
-    window.location.href=pageURL;
-}
-// 발표 등록 영역+++++++++
-// 1. 기존 만능 이동 함수 유지
-function GoToPage(pageURL){
-    window.location.href = pageURL;
-}
-
-// 2. 로컬스토리지에서 기존 발표 목록 가져오기 (없으면 빈 배열)
+// ==========================================
+// 1. 전역 데이터 초기화 (중복 선언 해결)
+// ==========================================
 let speechList = JSON.parse(localStorage.getItem('speechList')) || [];
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
-// 3. 발표 등록 모달 열기
-function Register_Spech() {
-    document.getElementById('registerModal').style.display = 'flex';
+function GoToPage(pageURL){ 
+    window.location.href = pageURL; 
 }
 
-// 4. 모달 닫기
-function closeModal() {
-    document.getElementById('registerModal').style.display = 'none';
+// ==========================================
+// 2. [신규] 간이 인증(로그인) 시스템
+// ==========================================
+function promptLogin() {
+    const id = prompt("아이디를 입력하세요 (별도 가입 없이 즉시 생성됨)");
+    if (!id) return;
+    const pw = prompt("비밀번호를 입력하세요");
+    if (!pw) return;
+
+    currentUser = { id: id.trim(), password: pw.trim() };
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    alert(`환영합니다, ${currentUser.id}님!`);
+    updateAuthUI();
+    renderSpeeches();
 }
 
-// 5. 게시하기 버튼 클릭 시 데이터 저장
+function logout() {
+    localStorage.removeItem('currentUser');
+    currentUser = null;
+    alert('로그아웃 되었습니다.');
+    updateAuthUI();
+    renderSpeeches();
+}
+
+function updateAuthUI() {
+    const msg = document.getElementById('welcomeMsg');
+    const btnLog = document.getElementById('btnLogin');
+    const btnOut = document.getElementById('btnLogout');
+    if (!msg || !btnLog || !btnOut) return;
+
+    if (currentUser) {
+        msg.innerText = `👤 ${currentUser.id}님`;
+        btnLog.style.display = 'none';
+        btnOut.style.display = 'inline-block';
+    } else {
+        msg.innerText = '';
+        btnLog.style.display = 'inline-block';
+        btnOut.style.display = 'none';
+    }
+}
+
+function checkLoginAndRegister() {
+    if (!currentUser) {
+        alert("발표를 등록하려면 먼저 로그인해 주세요!");
+        promptLogin();
+        return;
+    }
+    Register_Spech();
+}
+
+// ==========================================
+// 3. 모달 열기 / 닫기 / 인증필드 제어
+// ==========================================
+function Register_Spech() { 
+    document.getElementById('registerModal').style.display = 'flex'; 
+}
+
+function closeModal() { 
+    document.getElementById('registerModal').style.display = 'none'; 
+}
+
+function toggleAuthFields() {
+    const authType = document.getElementById('regAuthType').value;
+    const quizFields = document.getElementById('authQuizFields');
+    const passwordFields = document.getElementById('authPasswordFields');
+
+    if (authType === 'quiz') {
+        quizFields.style.display = 'flex';
+        passwordFields.style.display = 'none';
+    } else if (authType === 'password') {
+        quizFields.style.display = 'none';
+        passwordFields.style.display = 'flex';
+    } else {
+        quizFields.style.display = 'none';
+        passwordFields.style.display = 'none';
+    }
+}
+
+// ==========================================
+// 4. 발표 등록 및 소유권 주입 (submitSpeech)
+// ==========================================
 function submitSpeech() {
-    const title = document.getElementById('regTitle').value;
-    const speaker = document.getElementById('regSpeaker').value;
-    const location = document.getElementById('regLocation').value;
+    const title = document.getElementById('regTitle').value.trim();
+    const speaker = document.getElementById('regSpeaker').value.trim();
+    const location = document.getElementById('regLocation').value.trim();
     const dateTime = document.getElementById('regDateTime').value;
-    const content = document.getElementById('regContent').value;
+    const content = document.getElementById('regContent').value.trim();
+    const authType = document.getElementById('regAuthType').value;
 
-    // 간단한 유효성 검사
     if (!title || !speaker || !location || !dateTime || !content) {
-        alert('모든 항목을 입력해주세요!');
+        alert('기본 발표 정보를 모두 입력해주세요!');
         return;
     }
 
-    // [미래 대비] 검색과 피드백 매칭을 위해 고유 ID를 부여하여 객체(Object)화 합니다.
-    const newSpeech = {
-        id: Date.now(), // 타임스탬프를 이용한 고유 ID
-        title: title,
-        speaker: speaker,
-        location: location,
-        dateTime: dateTime,
-        content: content
+    let authData = { authType: authType };
+    if (authType === 'quiz') {
+        const youtube = document.getElementById('regYoutube').value.trim();
+        const question = document.getElementById('regQuizQuestion').value.trim();
+        const answer = document.getElementById('regQuizAnswer').value.trim();
+        if (!youtube || !question || !answer) {
+            alert('영상 퀴즈 인증에 필요한 모든 항목을 입력해주세요!');
+            return;
+        }
+        authData.youtube = youtube;
+        authData.quizQuestion = question;
+        authData.quizAnswer = answer;
+    } else if (authType === 'password') {
+        const password = document.getElementById('regPassword').value.trim();
+        if (!password) {
+            alert('입장 암호를 입력해주세요!');
+            return;
+        }
+        authData.password = password;
+    }
+
+    // 요구사항 1: 등록 시 owner 정보 결합
+    const newSpeech = { 
+        id: Date.now(), 
+        owner: currentUser ? currentUser.id : 'anonymous',
+        title, 
+        speaker, 
+        location, 
+        dateTime, 
+        content, 
+        ...authData 
     };
 
-    // 배열에 추가하고 로컬스토리지에 저장
     speechList.push(newSpeech);
     localStorage.setItem('speechList', JSON.stringify(speechList));
 
-    // 화면 새로고침 없이 바로 광장에 반영하고 모달 닫기
     renderSpeeches();
     closeModal();
+    resetModalInputs();
+}
 
-    // 다음 입력을 위해 양식 초기화
+function resetModalInputs() {
     document.getElementById('regTitle').value = '';
     document.getElementById('regSpeaker').value = '';
     document.getElementById('regLocation').value = '';
     document.getElementById('regDateTime').value = '';
     document.getElementById('regContent').value = '';
+    document.getElementById('regAuthType').value = 'none';
+    document.getElementById('regYoutube').value = '';
+    document.getElementById('regQuizQuestion').value = '';
+    document.getElementById('regQuizAnswer').value = '';
+    document.getElementById('regPassword').value = '';
+    toggleAuthFields();
 }
 
-// 6. 광장(화면)에 발표 카드들을 뿌려주는 함수
-function renderSpeeches() {
-    const container = document.getElementById('spechesContainer');
-    container.innerHTML = ''; // 기존에 그려진 카드들 초기화
-
-    // 저장된 발표가 하나도 없을 때 보여줄 기본 카드
-    if (speechList.length === 0) {
-        container.innerHTML = `
-            <div class="speches" style="text-align:center;">
-                안녕하세요 차희망 연설자 입니다. 첫 발표를 등록해보세요!
-            </div>`;
-        return;
-    }
-
-    // 최신 글로벌 트렌드에 맞춰 최신글이 맨 위에 오도록 배열을 역순(reverse)으로 뿌립니다.
-    const displayList = [...speechList].reverse();
-
-    displayList.forEach(speech => {
-        const card = document.createElement('div');
-        card.className = 'speches';
-        
-        // 구조를 유지하되 깔끔하게 데이터를 바인딩합니다. 
-        // 하단의 피드백하기 버튼은 주소창 뒤에 ?id=값 을 넘겨주어 추후 3단계 피드백 연동이 가능하게 설계했습니다.
-        card.innerHTML = `
-            <h3>${speech.title}</h3>
-            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">
-                <strong>발표자:</strong> ${speech.speaker}
-            </p>
-            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">
-                <strong>장소:</strong> ${speech.location} | <strong>일시:</strong> ${speech.dateTime.replace('T', ' ')}
-            </p>
-            <p style="margin: 15px 0 0 0; color: #374151;">${speech.content}</p>
-            <button onclick="GoToPage('FK_GiveFeedback.html?id=${speech.id}')" style="margin-top:15px; background-color:#111827; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
-                피드백 참여
-            </button>
-        `;
-        container.appendChild(card);
-    });
-}
-
-// 7. 페이지가 처음 켜질 때 로컬스토리지 데이터를 자동으로 화면에 그려줌
-window.onload = function() {
-    renderSpeeches();
-};
-//발표 등록 -----------
-// ... 기존 1단계 자바스크립트 코드 아래에 수정 및 추가 ...
-
-// [기존 함수 업그레이드]: 인자로 리스트를 넘겨받을 수 있게 수정합니다.
-// 만약 인자(list)가 없으면 기본값으로 전체 speechList를 사용합니다.
+// ==========================================
+// 5. 광장 리스트 렌더러 (요구사항 2 동적 분기 반영)
+// ==========================================
 function renderSpeeches(list = speechList) {
     const container = document.getElementById('spechesContainer');
+    if(!container) return;
     container.innerHTML = ''; 
-
-    // 검색 결과나 데이터가 아예 없을 때
     if (list.length === 0) {
-        container.innerHTML = `
-            <div class="speches" style="text-align:center; color:#9ca3af;">
-                조건에 맞는 발표 데이터가 없습니다.
-            </div>`;
+        container.innerHTML = `<div class="speches" style="text-align:center; color:#9ca3af;">등록된 발표가 없습니다.</div>`;
         return;
     }
-
-    // 최신글 우선 정렬
-    const displayList = [...list].reverse();
-
-    displayList.forEach(speech => {
+    [...list].reverse().forEach(speech => {
         const card = document.createElement('div');
         card.className = 'speches';
         
+        let badge = "🔓 자유 참여";
+        if(speech.authType === 'quiz') badge = "📺 영상 퀴즈";
+        if(speech.authType === 'password') badge = "🔒 현장 암호";
+
+        // 요구사항 2: 내가 만든 발표글이면 대시보드로, 남의 발표글이면 참여로 분기
+        let actionButton = '';
+        if (currentUser && speech.owner === currentUser.id) {
+            actionButton = `
+                <button onclick="GoToPage('FK_Dashboard.html?id=${speech.id}')" style="margin-top:15px; background-color:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
+                    📊 피드백 결과 조회
+                </button>`;
+        } else {
+            actionButton = `
+                <button onclick="GoToPage('FK_GiveFeedback.html?id=${speech.id}')" style="margin-top:15px; background-color:#111827; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.backgroundColor='#10b981'" onmouseout="this.style.backgroundColor='#111827'">
+                    피드백 참여
+                </button>`;
+        }
+
         card.innerHTML = `
-            <h3>${speech.title}</h3>
-            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">
-                <strong>발표자:</strong> ${speech.speaker}
-            </p>
-            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">
-                <strong>장소:</strong> ${speech.location} | <strong>일시:</strong> ${speech.dateTime.replace('T', ' ')}
-            </p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3 style="margin:0;">${speech.title}</h3>
+                <span style="font-size:11px; padding:4px 8px; background:#f3f4f6; border-radius:12px; color:#4b5563; font-weight:bold;">${badge}</span>
+            </div>
+            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;"><strong>발표자:</strong> ${speech.speaker}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;"><strong>장소:</strong> ${speech.location} | <strong>일시:</strong> ${speech.dateTime.replace('T', ' ')}</p>
             <p style="margin: 15px 0 0 0; color: #374151;">${speech.content}</p>
-            <button onclick="GoToPage('FK_GiveFeedback.html?id=${speech.id}')" style="margin-top:15px; background-color:#111827; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
-                피드백 참여
-            </button>
+            ${actionButton}
         `;
         container.appendChild(card);
     });
 }
 
-// [신규 추가] 2. 검색 실행 함수
+// ==========================================
+// 6. 검색 및 필터링 기능
+// ==========================================
 function searchSpeeches() {
-    // 사용자가 입력한 값 가져오기 (대소문자 구분을 없애기 위해 trim으로 공백만 제거)
     const sTitle = document.getElementById('searchTitle').value.trim();
     const sSpeaker = document.getElementById('searchSpeaker').value.trim();
     const sLocation = document.getElementById('searchLocation').value.trim();
     const sDate = document.getElementById('searchDate').value.trim();
 
-    // 4가지 조건 중 하나라도 입력된 게 있다면 필터링 시작!
     const filteredList = speechList.filter(speech => {
-        // 각 항목별로 입력값이 있을 때만 포함(includes) 검사를 하고, 빈칸이면 무조건 pass(true) 시킵니다.
         const matchTitle = sTitle ? speech.title.includes(sTitle) : true;
         const matchSpeaker = sSpeaker ? speech.speaker.includes(sSpeaker) : true;
         const matchLocation = sLocation ? speech.location.includes(sLocation) : true;
         const matchDate = sDate ? speech.dateTime.includes(sDate) : true;
-
-        // 4가지 조건을 모두 만족(AND)하는 데이터만 남깁니다.
         return matchTitle && matchSpeaker && matchLocation && matchDate;
     });
 
-    // 필터링된 결과만 가지고 화면을 새로 그립니다!
     renderSpeeches(filteredList);
 }
 
-// [신규 추가] 3. 검색 초기화 함수
 function resetSearch() {
-    // 모든 인풋창 비우기
     document.getElementById('searchTitle').value = '';
     document.getElementById('searchSpeaker').value = '';
     document.getElementById('searchLocation').value = '';
     document.getElementById('searchDate').value = '';
-
-    // 인자 없이 실행하면 전체 리스트(speechList)가 다시 깔끔하게 그려집니다.
     renderSpeeches();
 }
+
+window.onload = function() { 
+    updateAuthUI();
+    renderSpeeches(); 
+};
