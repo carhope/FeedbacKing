@@ -1,73 +1,118 @@
-.encounter{
-    font-size :40px;
-    font-weight:bold;
-    text-align:center;
-    margin-top:30px;
-    color:chartreuse;
-    font-family: 'Arial', sans-serif;
-    
+/* 전체 기본 세팅 (폰트 및 깔끔한 배경) */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa; /* 부드러운 아이보리빛 화이트 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
-.user{
-    display:flex;
-}
-.introduction{
-    display: block;
-    width: 200px;
-    margin: 20px auto;
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
+
+/* 메인 타이틀 */
+.encounter {
+    font-size: 42px;
+    font-weight: 800;
     text-align: center;
-    text-decoration: none;
-    font-size: 18px;
-    border-radius: 5px;
+    margin: 40px 0 25px 0;
+    color: #10b981; /* 트렌디한 에메랄드 그린 */
+    letter-spacing: -1px;
 }
-.introduce{
-    font-size: 20px;
-    margin: 20px;
-    line-height: 1.5;
-    color:darkgreen;
-    font-family: 'Arial', sans-serif;
+
+/* 내비게이션 바 */
+.navigation {
+    background-color: #006a41; /* 세련되고 묵직한 다크 차콜 */
+    padding: 12px 40px;
+    gap: 12px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
-.introduce h3{
-    font-size: 24px;
-    color:dodgerblue;
-    margin-bottom: 10px;
-}
-.navigation{
-    background-color :rgb(56, 190, 83);
-    padding : 20px;
-    gap: 20px;
-    display : flex; /*내비게이션바 핵심*/
-}
+
+/* 내비게이션 안의 기본 버튼들 */
 .navigation button {
-
-    color:rgb(25, 38, 153);
-
-    font-weight: bold;
-
-    border-radius: 0;
-
-    background-color: rgb(165, 249, 249);
-
-};
-.active {
-    color:rgb(70, 79, 163);
-
-    font-weight: bold;
-
-    border-radius: 0;
-
-    background-color: rgb(85, 151, 151);
+    color: #bdbfc2; /* 평소에는 차분한 그레이 색상 */
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px; /* 딱딱한 각진 모서리 대신 부드러운 라운딩 */
+    background-color: transparent; /* 배경을 투명하게 해서 내비바와 일치 */
+    cursor: pointer;
+    transition: all 0.2s ease; /* 마우스 올렸을 때 부드럽게 변하는 효과 */
 }
 
-.speches{
-    width: 500px;
-    height: 100px;
-    background-color: rgb(36, 210, 65);
-    border-radius: 20px;
-    border-style: solid;
+/* 버튼에 마우스를 올렸을 때 (Hover 효과) */
+.navigation button:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1); /* 살짝 밝아지는 효과 */
+}
 
-    font-style: normal;
+/* 활성화된 버튼 (현재 페이지 위치 표시) */
+.navigation button.active, #hover {
+    color: #ffffff !important;
+    background-color: #10b981 !important; /* 타이틀과 맞춘 에메랄드 포인트 */
+}
+
+/* 구분선 제거 (내비바에 그림자가 있어서 없는 게 더 깔끔합니다) */
+hr {
+    display: none;
+}
+
+/* 발표자 피드백 카드 */
+.speches {
+    width: 450px;
+    height: auto; /* 내용물에 맞게 패딩으로 조절하는 게 정석입니다 */
+    padding: 24px;
+    margin: 40px auto; /* 화면 중앙 배치 */
+    background-color: #ffffff; /* 깔끔한 화이트 카드 */
+    color: #1f2937;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb; /* 두꺼운 검은선 대신 은은한 그레이 선 */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); /* 고급스러운 그림자 효과 */
     text-align: center;
+    line-height: 1.6;
 }
+
+/* --- 나중에 쓰실 로그인 바 디자인도 미리 고급스럽게 세팅해 두었습니다 --- */
+#LoginBar {
+    width: 360px;
+    margin: 40px auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column; /* 세로 정렬 */
+    gap: 16px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+#LetLogin{
+    width: 80px;
+    height: 40px;
+}
+
+.idInput, .pwInput {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #f9fafb;
+    transition: border-color 0.2s;
+}
+
+.idInput:focus, .pwInput:focus {
+    outline: none;
+    border-color: #10b981; /* 포커스 시 그린 색상 강조 */
+    background-color: #ffffff;
+}
+
+/* 기존 안 쓰는 스타일들 유지 */
+.user { display: flex; }
+.introduction { display: block; width: 200px; margin: 20px auto; padding: 10px; background-color: #4CAF50; color: white; text-align: center; text-decoration: none; font-size: 18px; border-radius: 5px; }
+.introduce { font-size: 20px; margin: 20px; line-height: 1.5; color: darkgreen; font-family: 'Arial', sans-serif; }
+.introduce h3 { font-size: 24px; color: dodgerblue; margin-bottom: 10px; }
+

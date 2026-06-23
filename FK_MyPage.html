@@ -3,9 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>FeedbacKing</title>
+    <link rel="stylesheet" type="text/css" href="FK.css">
+    <link rel="stylesheet" type="text/js" href="FK_js">
 </head>
 <body>
-    
+
+    <h2 class="encounter">FeedbacKing</h2>
+
+    <div class="navigation">
+        <button onclick="GoToPage('FK.html')">발표 광장</button>
+        <button class="Spech_Register" onclick="Register_Spech()" >발표 등록하기</button>
+
+        <button  onclick="GoToPage('FK_GiveFeedback.html')">피드백 참여</button>
+        <button  onclick="GoToPage('FK_introduce.html')">Introduction</button>
+        <button id="hover">마이페이지</button>
+    </div>
+    <hr>
+
+<script src="FK.js"></script>
 </body>
 </html>
