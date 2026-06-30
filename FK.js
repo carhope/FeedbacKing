@@ -1,6 +1,3 @@
-// ==========================================
-// 1. 전역 데이터 초기화 (중복 선언 해결)
-// ==========================================
 let speechList = JSON.parse(localStorage.getItem('speechList')) || [];
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
@@ -9,8 +6,45 @@ function GoToPage(pageURL){
 }
 
 // ==========================================
-// 2. [신규] 간이 인증(로그인) 시스템
+// [실시간 라이브 기능 추가] 라이브 배너 상태 체크 및 스위칭 분기 엔진
 // ==========================================
+function checkLiveBanner() {
+    const liveBanner = document.getElementById('liveBanner');
+    const liveTitle = document.getElementById('liveTitle');
+    const liveBtn = document.getElementById('liveBtn');
+    if (!liveBanner || !liveTitle || !liveBtn) return;
+
+    const liveSpeechId = localStorage.getItem('liveSpeechId');
+    
+    // 활성화된 라이브 ID가 없다면 배너 폐쇄
+    if (!liveSpeechId) {
+        liveBanner.style.display = 'none';
+        return;
+    }
+
+    const liveSpeech = speechList.find(s => s.id === Number(liveSpeechId));
+    if (!liveSpeech) {
+        liveBanner.style.display = 'none';
+        return;
+    }
+
+    // 라이브 정보 바인딩 및 표시
+    liveBanner.style.display = 'flex';
+    liveTitle.innerText = liveSpeech.title;
+
+    // 권한 감지 분기 (소유자 대시보드 vs 청중 참여창)
+    if (currentUser && liveSpeech.owner === currentUser.id) {
+        liveBtn.innerText = "📊 실시간 결과 대시보드 보기";
+        liveBtn.style.backgroundColor = "#10b981"; 
+        liveBtn.onclick = () => GoToPage(`FK_Dashboard.html?id=${liveSpeech.id}`);
+    } else {
+        liveBtn.innerText = "지금 바로 피드백 참여하기";
+        liveBtn.style.backgroundColor = "#ef4444"; 
+        liveBtn.onclick = () => GoToPage(`FK_GiveFeedback.html?id=${liveSpeech.id}`);
+    }
+}
+
+// 간이 인증(로그인) 시스템
 function promptLogin() {
     const id = prompt("아이디를 입력하세요 (별도 가입 없이 즉시 생성됨)");
     if (!id) return;
@@ -58,9 +92,6 @@ function checkLoginAndRegister() {
     Register_Spech();
 }
 
-// ==========================================
-// 3. 모달 열기 / 닫기 / 인증필드 제어
-// ==========================================
 function Register_Spech() { 
     document.getElementById('registerModal').style.display = 'flex'; 
 }
@@ -86,9 +117,6 @@ function toggleAuthFields() {
     }
 }
 
-// ==========================================
-// 4. 발표 등록 및 소유권 주입 (submitSpeech)
-// ==========================================
 function submitSpeech() {
     const title = document.getElementById('regTitle').value.trim();
     const speaker = document.getElementById('regSpeaker').value.trim();
@@ -123,7 +151,6 @@ function submitSpeech() {
         authData.password = password;
     }
 
-    // 요구사항 1: 등록 시 owner 정보 결합
     const newSpeech = { 
         id: Date.now(), 
         owner: currentUser ? currentUser.id : 'anonymous',
@@ -157,9 +184,6 @@ function resetModalInputs() {
     toggleAuthFields();
 }
 
-// ==========================================
-// 5. 광장 리스트 렌더러 (요구사항 2 동적 분기 반영)
-// ==========================================
 function renderSpeeches(list = speechList) {
     const container = document.getElementById('spechesContainer');
     if(!container) return;
@@ -176,11 +200,10 @@ function renderSpeeches(list = speechList) {
         if(speech.authType === 'quiz') badge = "📺 영상 퀴즈";
         if(speech.authType === 'password') badge = "🔒 현장 암호";
 
-        // 요구사항 2: 내가 만든 발표글이면 대시보드로, 남의 발표글이면 참여로 분기
         let actionButton = '';
         if (currentUser && speech.owner === currentUser.id) {
             actionButton = `
-                <button onclick="GoToPage('FK_DashBoard.html?id=${speech.id}')" style="margin-top:15px; background-color:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
+                <button onclick="GoToPage('FK_Dashboard.html?id=${speech.id}')" style="margin-top:15px; background-color:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
                     📊 피드백 결과 조회
                 </button>`;
         } else {
@@ -202,11 +225,11 @@ function renderSpeeches(list = speechList) {
         `;
         container.appendChild(card);
     });
+
+    // [실시간 라이브 기능 추가] 리스트를 그릴 때 상단 배너 상태도 동기화하여 감시
+    checkLiveBanner();
 }
 
-// ==========================================
-// 6. 검색 및 필터링 기능
-// ==========================================
 function searchSpeeches() {
     const sTitle = document.getElementById('searchTitle').value.trim();
     const sSpeaker = document.getElementById('searchSpeaker').value.trim();

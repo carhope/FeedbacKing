@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FeedbacKing</title>
     <link rel="stylesheet" type="text/css" href="FK.css">
+    <style>
+        @keyframes liveBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
 </head>
 <body>
 
@@ -21,6 +24,17 @@
             <button id="btnLogin" onclick="promptLogin()" style="background: #111827; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">로그인</button>
             <button id="btnLogout" onclick="logout()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: none;">로그아웃</button>
         </div>
+    </div>
+
+    <div id="liveBanner" style="display: none; background: linear-gradient(90deg, #0f172a 0%, #047857 100%); border: 2px solid #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); padding: 15px 25px; border-radius: 12px; margin: 20px 0; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="background: #ef4444; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; animation: liveBlink 1s infinite; letter-spacing: 1px;">🔥 LIVE</span>
+            <div style="color: white;">
+                <span style="font-size: 12px; color: #a7f3d0; font-weight: bold; display: block; margin-bottom: 2px;">현재 무대에서 실시간 라이브 피드백 진행 중!</span>
+                <strong id="liveTitle" style="font-size: 18px; color: #ffffff;">발표 제목</strong>
+            </div>
+        </div>
+        <button id="liveBtn" style="color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;"></button>
     </div>
 
     <div id="searchBar">
