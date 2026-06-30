@@ -180,7 +180,7 @@ function renderSpeeches(list = speechList) {
         let actionButton = '';
         if (currentUser && speech.owner === currentUser.id) {
             actionButton = `
-                <button onclick="GoToPage('FK_Dashboard.html?id=${speech.id}')" style="margin-top:15px; background-color:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
+                <button onclick="GoToPage('FK_DashBoard.html?id=${speech.id}')" style="margin-top:15px; background-color:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
                     📊 피드백 결과 조회
                 </button>`;
         } else {
