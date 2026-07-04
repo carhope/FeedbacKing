@@ -62,7 +62,7 @@
     </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
+        /*const params = new URLSearchParams(window.location.search);
         const currentId = Number(params.get('id'));
         const speechDataList = JSON.parse(localStorage.getItem('speechList')) || [];
         const speech = speechDataList.find(item => item.id === currentId);
@@ -210,7 +210,70 @@
             document.getElementById('aiMetric').innerText = `📊 분석 스코어: ${'★'.repeat(selectedScore)} (${selectedScore}.0 / 5.0)`;
             document.getElementById('aiReportSection').style.display = 'block';
             document.getElementById('aiReportSection').scrollIntoView({ behavior: 'smooth' });
+        }*/
+        // Firebase 설정 파트 로드 동일 적용
+        const db = firebase.firestore();
+        const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        
+        // 현재 접속한 쿼리 스트링 변수(발표 ID) 파싱
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSpeechId = Number(urlParams.get('id'));
+
+        // 발표자의 한마디 상단 가이드 바인딩 인터페이스 렌더링
+        db.collection('speeches').where('id', '==', currentSpeechId).get().then(snap => {
+            snap.forEach(doc => {
+                const data = doc.data();
+                document.getElementById('focusNoteBanner').innerText = `💡 발표자의 포커싱 한마디: "${data.presenterNote}"`;
+            });
+        });
+
+        // 피드백 최종 클라우드 업로드 트랜잭션 핸들러
+        function submitFeedbackData() {
+            if(!currentUser) {
+                alert("정체성이 입증되지 않은 익명 청중은 피드백 기록이 불가합니다. 먼저 계정 인증 로그인을 완료해 주세요.");
+                return;
+            }
+
+            const inputScore = Number(document.getElementById('feedbackScoreValue').value);
+            const inputComment = document.getElementById('feedbackCommentArea').value.trim();
+
+            if(!inputComment) {
+                alert("발표자를 위한 최소한의 성의 있는 한줄평을 채워주십시오.");
+                return;
+            }
+
+            // =========================================================================
+            // [추가 기능 3] 1인 1피드백 중복 방지 필터링 레이어 무결성 가동
+            // =========================================================================
+            db.collection('feedbacks')
+            .where('speechId', '==', currentSpeechId)
+            .where('reviewer', '==', currentUser.id)
+            .get()
+            .then(duplicateSnapshot => {
+                if (!duplicateSnapshot.empty) {
+                    // 이미 해당 유저가 본 발표 세션에 점수를 제출한 이력이 발견된 상태
+                    alert("🚨 중복 참여 제한 디펜더 작동:\n이미 본 발표에 대해 클라우드에 피드백 전송을 완료하셨습니다. 공정한 데이터 관리를 위해 중복 피드백 기재는 불가능합니다.");
+                    return; // 프로세스 강제 인터럽트 중단
+                }
+
+                // 중복 검사 완벽히 통과 시 구글 Firestore 클라우드 원격 DB 최종 안전 커밋
+                const feedbackPayload = {
+                    id: Date.now(),
+                    speechId: currentSpeechId,
+                    reviewer: currentUser.id,
+                    score: inputScore,
+                    comment: inputComment,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // 서버 시간 보정
+                };
+
+                db.collection('feedbacks').add(feedbackPayload).then(() => {
+                    alert("🎉 실시간 피드백 전송 성공! 연설자의 대시보드 리포트로 데이터가 무선 전파되었습니다.");
+                    window.location.href = 'FK.html';
+                });
+            })
+            .catch(err => console.error("중복 방지 트랜잭션 예외 발생:", err));
         }
+
     </script>
 </body>
 </html>

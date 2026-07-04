@@ -1,12 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FeedbacKing</title>
+    <title>FeedbacKing - 실시간 라이브 플랫폼</title>
     <link rel="stylesheet" type="text/css" href="FK.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         @keyframes liveBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .btn-delete { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; padding: 4px; transition: 0.2s; }
+        .btn-delete:hover { transform: scale(1.15); }
+        .presenter-note-box { background: #f0fdf4; border-left: 4px solid #10b981; padding: 10px 12px; margin: 10px 0; border-radius: 0 8px 8px 0; font-size: 13px; color: #047857; }
     </style>
 </head>
 <body>
@@ -75,6 +80,8 @@
             <div id="authPasswordFields" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
                 <input type="password" id="regPassword" placeholder="피드백 입장 암호 (숫자 4자리)" maxlength="4">
             </div>
+
+            <textarea id="regPresenterNote" rows="2" placeholder="💡 청중에게 집중 피드백을 받고 싶은 부분을 적어주세요! (예: 발표 속도나 슬라이드 가시성을 중점적으로 봐주세요!)" style="margin-top: 10px; border: 1px solid #10b981; background: #f0fdf4;"></textarea>
             
             <textarea id="regContent" rows="4" placeholder="발표 내용을 입력하세요" style="margin-top: 10px;"></textarea>
             

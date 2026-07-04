@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FeedbacKing - 마이페이지</title>
+    <title>FeedbacKing - 마이페이지 클라우드 제어</title>
     <link rel="stylesheet" type="text/css" href="FK.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         .mypage-layout { max-width: 700px; margin: 40px auto; padding: 0 20px; }
         .profile-card { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e5e7eb; margin-bottom: 20px; }
@@ -12,7 +14,6 @@
         .data-section { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 15px; }
         .data-list { list-style: none; padding: 0; margin: 0; }
         .data-list li { padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size:14px; color:#4b5563; display: flex; justify-content: space-between; align-items: center; }
-        .data-list li:last-child { border: none; }
     </style>
 </head>
 <body>
@@ -23,115 +24,112 @@
         <div class="profile-card">
             <h3>🔑 마이페이지 계정 정보</h3>
             <p style="margin:5px 0; font-size:14px; color:#4b5563;"><strong>로그인 계정 ID:</strong> <span id="userIdDisplay" style="color:#10b981; font-weight:bold;">-</span></p>
-            <p style="margin:5px 0; font-size:14px; color:#4b5563;"><strong>비밀번호 보안인증:</strong> <span id="userPwDisplay">-</span></p>
         </div>
 
         <div class="ai-analysis-card">
             <span style="font-size:11px; text-transform:uppercase; letter-spacing:1px; background:rgba(16,185,129,0.2); padding:4px 8px; border-radius:4px; font-weight:bold;">Psychology Analysis</span>
-            <h2 id="aiPersonaTitle" style="margin:10px 0 5px 0; color:#10b981;">분석 로딩 중...</h2>
+            <h2 id="aiPersonaTitle" style="margin:10px 0 5px 0; color:#10b981;">클라우드 데이터 계산 중...</h2>
             <p id="aiPersonaDesc" style="margin:0; font-size:14px; color:#cbd5e1; line-height:1.6;"></p>
         </div>
 
         <div class="data-section">
-            <h4>🎤 내가 주최한 발표 리스트 (실시간 컨트롤 타워)</h4>
+            <h4>🎤 내가 주최한 발표 리스트 (전역 라이브 컨트롤 타워)</h4>
             <ul id="hostedList" class="data-list"></ul>
-        </div>
-
-        <div class="data-section">
-            <h4>🎧 내가 청강하고 평가한 내역</h4>
-            <ul id="listenedList" class="data-list"></ul>
         </div>
 
         <button onclick="window.location.href='FK.html'" style="width:100%; height:48px; background:#111827; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">발표 광장으로 가기</button>
     </div>
 
     <script>
+        // Firebase 재정의 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1...",
+            authDomain: "feedbacking-XXXXX.firebaseapp.com",
+            projectId: "feedbacking-XXXXX"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        
         if(!currentUser) {
-            alert('로그인 세션 정보가 없습니다. 광장 메인 화면으로 리다이렉트합니다.');
+            alert('로그인 세션이 비어있어 메인 화면으로 귀환 처리합니다.');
             window.location.href = 'FK.html';
         } else {
             document.getElementById('userIdDisplay').innerText = currentUser.id;
-            document.getElementById('userPwDisplay').innerText = "•".repeat(currentUser.password.length) + " (암호화 보호됨)";
         }
 
-        const speechList = JSON.parse(localStorage.getItem('speechList')) || [];
-        const globalFeedbackList = JSON.parse(localStorage.getItem('globalFeedbackList')) || [];
-        
-        // [실시간 라이브 기능 추가] 현재 공유 중인 글로벌 라이브 스피치 식별 ID 대조
-        const currentLiveId = localStorage.getItem('liveSpeechId');
+        // 실시간 복합 결합 데이터 처리 파이프라인 구축
+        db.collection('system').doc('liveState').onSnapshot(liveDoc => {
+            const currentLiveId = liveDoc.exists ? String(liveDoc.data().liveSpeechId) : null;
 
-        const myHostedSpeeches = speechList.filter(s => s.owner === currentUser.id);
-        const myGivenFeedbacks = globalFeedbackList.filter(f => f.reviewer === currentUser.id);
+            db.collection('speeches').get().then(speechSnapshot => {
+                const speechList = [];
+                speechSnapshot.forEach(d => speechList.push(d.data()));
 
-        // 내가 주최한 리스트 바인딩 및 라이브 토글 버튼 조립
-        const hostedUl = document.getElementById('hostedList');
-        if(myHostedSpeeches.length === 0) {
-            hostedUl.innerHTML = `<li>아직 개설하여 등록한 발표가 존재하지 않습니다.</li>`;
-        } else {
-            myHostedSpeeches.forEach(s => {
-                // [실시간 라이브 기능 추가] 현재 해당 스피치가 LIVE 중인지 파악하여 버튼 분기
-                const isLiveNow = (currentLiveId === String(s.id));
-                const liveActionBtn = isLiveNow 
-                    ? `<button onclick="stopLiveSpeech()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⏹️ 라이브 종료</button>`
-                    : `<button onclick="startLiveSpeech(${s.id})" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⚡ 라이브 시작</button>`;
+                const myHostedSpeeches = speechList.filter(s => s.owner === currentUser.id);
+                const hostedUl = document.getElementById('hostedList');
+                hostedUl.innerHTML = '';
 
-                hostedUl.innerHTML += `
-                    <li>
-                        <span>📢 <strong>${s.title}</strong> <small style="color:#9ca3af; margin-left:5px;">(${s.location})</small></span>
-                        ${liveActionBtn}
-                    </li>`;
+                if(myHostedSpeeches.length === 0) {
+                    hostedUl.innerHTML = `<li>아직 개설하여 공유 등록한 발표 세션이 존재하지 않습니다.</li>`;
+                } else {
+                    myHostedSpeeches.forEach(s => {
+                        const isLiveNow = (currentLiveId === String(s.id));
+                        const liveActionBtn = isLiveNow 
+                            ? `<button onclick="stopLiveSpeech()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⏹️ 전역 라이브 방송 강제 종료</button>`
+                            : `<button onclick="startLiveSpeech(${s.id})" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⚡ 실시간 라이브 무대 연동 On</button>`;
+
+                        hostedUl.innerHTML += `
+                            <li>
+                                <span>📢 <strong>${s.title}</strong></span>
+                                ${liveActionBtn}
+                            </li>`;
+                    });
+                }
             });
-        }
+        });
 
-        // [실시간 라이브 기능 추가] 라이브 트리거 활성화 핸들러 함수
+        // 전역 실시간 라이브 트리거 구동 (전체 접속 청중 스마트폰 화면 동시 폭파용)
         function startLiveSpeech(id) {
-            localStorage.setItem('liveSpeechId', id);
-            alert('🔥 라이브 연동 성공!\n이제 광장 메인 페이지 최상단에 본 발표문이 라이브 피드백 배너로 고정 노출됩니다.');
-            location.reload();
+            db.collection('system').doc('liveState').set({ liveSpeechId: Number(id) })
+            .then(() => alert('🔥 클라우드 실시간 채널 고정 완료!\n전체 청중 디바이스 메인 스크롤 상단에 본 발표가 긴급 라이브 배너로 즉시 동기화 노출됩니다.'))
+            .catch(err => alert(err));
         }
 
-        // [실시간 라이브 기능 추가] 라이브 셧다운 오프 핸들러 함수
         function stopLiveSpeech() {
-            localStorage.removeItem('liveSpeechId');
-            alert('⏹️ 라이브 무대가 성공적으로 종료되어 광장 배너가 해제되었습니다.');
-            location.reload();
+            db.collection('system').doc('liveState').set({ liveSpeechId: null })
+            .then(() => alert('⏹️ 라이브 방송 종료 처리가 즉시 전파되었습니다.'))
+            .catch(err => alert(err));
         }
 
-        const listenedUl = document.getElementById('listenedList');
-        if(myGivenFeedbacks.length === 0) {
-            listenedUl.innerHTML = `<li>아직 광장에서 청강 후 남긴 피드백 리포트가 없습니다.</li>`;
-        } else {
-            myGivenFeedbacks.forEach(f => {
-                const targetSpeech = speechList.find(s => s.id === f.speechId);
-                const titleStr = targetSpeech ? targetSpeech.title : "종료된 세션 발표";
-                listenedUl.innerHTML += `<li><span>✅ [${titleStr}]</span> <strong>${f.score}.0점</strong></li>`;
-            });
-        }
+        // 마이페이지 AI 페르소나 연산 통합 엔진
+        db.collection('feedbacks').where('reviewer', '==', currentUser.id).get().then(snap => {
+            const myGivenFeedbacks = [];
+            snap.forEach(d => myGivenFeedbacks.push(d.data()));
 
-        const aiPersonaTitle = document.getElementById('aiPersonaTitle');
-        const aiPersonaDesc = document.getElementById('aiPersonaDesc');
+            const aiPersonaTitle = document.getElementById('aiPersonaTitle');
+            const aiPersonaDesc = document.getElementById('aiPersonaDesc');
 
-        if(myGivenFeedbacks.length === 0) {
-            aiPersonaTitle.innerText = "🌱 가치관 탐색가";
-            aiPersonaDesc.innerText = "아직 축적된 피드백 빅데이터가 모자라 분석을 보류 중입니다. 광장에 개방된 무대를 시청하고 첫 점수를 입력하시면 정교한 성향 도출이 시작됩니다.";
-        } else {
-            const sumScore = myGivenFeedbacks.reduce((acc, cur) => acc + cur.score, 0);
+            if(myGivenFeedbacks.length === 0) {
+                aiPersonaTitle.innerText = "🌱 데이터 수집 단계 (가치관 탐색가)";
+                aiPersonaDesc.innerText = "현재 클라우드에 누적된 평가 점수 데이터가 부족합니다. 타인의 무대를 관람하고 첫 실시간 평론 한줄평을 전송하면 객관적 분석 계측이 트리거됩니다.";
+                return;
+            }
+
+            const sumScore = myGivenFeedbacks.reduce((acc, cur) => acc + Number(cur.score), 0);
             const scoreAvg = sumScore / myGivenFeedbacks.length;
-            const textLengthAvg = myGivenFeedbacks.reduce((acc, cur) => acc + cur.comment.length, 0) / myGivenFeedbacks.length;
 
             if(scoreAvg >= 4.2) {
-                aiPersonaTitle.innerText = "👼 따뜻한 격려가 (천사표 청중)";
-                aiPersonaDesc.innerText = "당신은 발표의 아쉬운 점보다 연설자의 잠재력과 장점을 캐치해 내는 능력이 탁월합니다. 전반적으로 높은 가중치의 별점 보상을 던져 무대 위의 화자에게 거대한 정서적 용기를 불어넣는 따스한 멘토링 스타일입니다.";
-            } else if (scoreAvg <= 3.2 && textLengthAvg >= 35) {
-                aiPersonaTitle.innerText = "🔥 날카로운 현장 비평가";
-                aiPersonaDesc.innerText = "단순 비난이 아닙니다. 별점은 엄격하고 깐깐하게 다스리되, 텍스트 피드백의 길이가 장문형으로 매우 구체적입니다. 연설 구성의 인과 관계나 자료의 부족함을 논리적으로 조명하여 실제 스피커 실력을 고속 튜닝시키는 귀중한 평론가 성향입니다.";
+                aiPersonaTitle.innerText = "👼 따뜻한 격려가 (천사표 평론가)";
+                aiPersonaDesc.innerText = "당신은 발표자의 긴장을 완화하고 잠재력을 인위적으로 부각시키는 따뜻한 멘토형 청중입니다. 가중치 높은 별점과 따뜻한 문맥의 서포트를 전달합니다.";
+            } else if(scoreAvg <= 3.2) {
+                aiPersonaTitle.innerText = "🔥 날카로운 무대 저격수 (현장 비평가)";
+                aiPersonaDesc.innerText = "엄격하고 예리한 시선으로 냉혹하고 완벽한 지표를 산출해 내는 전문가 유형입니다. 스피커의 실질적 실력 성장을 가이드하는 귀중한 논리형 청중 성향입니다.";
             } else {
-                aiPersonaTitle.innerText = "🧐 이성적인 데이터 분석가";
-                aiPersonaDesc.innerText = "감정에 휘둘리지 않는 밸런스 균형 감각의 대명사입니다. 잘한 부분과 부족한 면의 저울질이 완벽히 일정하며, 표준 편차에 수렴하는 합리적이고 객관적인 스코어링 지표를 유지하는 이상적인 정보 중심 청중 유형입니다.";
+                aiPersonaTitle.innerText = "🧐 이성적인 통계학자 (데이터 분석가)";
+                aiPersonaDesc.innerText = "중간 편차 수렴도가 극도로 안정적인 이상적 데이터 분석가 유형입니다. 감정에 휘둘리지 않고 철저히 중립과 팩트에 기반하여 무대의 균형추를 유지해 줍니다.";
             }
-        }
+        });
     </script>
 </body>
 </html>
