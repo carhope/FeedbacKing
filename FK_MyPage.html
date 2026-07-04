@@ -18,7 +18,7 @@
 </head>
 <body>
 
-    <h2 class="encounter" onclick="window.location.href='FK.html'" style="cursor:pointer;">FeedbacKing</h2>
+    <h2 class="encounter" id="navLogoHome" style="cursor:pointer;">FeedbacKing</h2>
 
     <div class="mypage-layout">
         <div class="profile-card">
@@ -37,16 +37,11 @@
             <ul id="hostedList" class="data-list"></ul>
         </div>
 
-        <button onclick="window.location.href='FK.html'" style="width:100%; height:48px; background:#111827; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">발표 광장으로 가기</button>
+        <button id="btnBackToMain" style="width:100%; height:48px; background:#111827; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">발표 광장으로 가기</button>
     </div>
 
-    <script>
-        // Firebase 재정의 설정
-        const firebaseConfig = {
-            apiKey: "AIzaSyA1...",
-            authDomain: "feedbacking-XXXXX.firebaseapp.com",
-            projectId: "feedbacking-XXXXX"
-        };
+    <script type="module">
+        import { firebaseConfig } from './config.js';
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -58,7 +53,20 @@
             document.getElementById('userIdDisplay').innerText = currentUser.id;
         }
 
-        // 실시간 복합 결합 데이터 처리 파이프라인 구축
+        // 전역 라이브 제어 트리거 함수들
+        function startLiveSpeech(id) {
+            db.collection('system').doc('liveState').set({ liveSpeechId: Number(id) })
+            .then(() => alert('🔥 클라우드 실시간 채널 고정 완료!\n전체 청중 디바이스 메인 스크롤 상단에 본 발표가 긴급 라이브 배너로 즉시 동기화 노출됩니다.'))
+            .catch(err => alert(err));
+        }
+
+        function stopLiveSpeech() {
+            db.collection('system').doc('liveState').set({ liveSpeechId: null })
+            .then(() => alert('⏹️ 라이브 방송 종료 처리가 즉시 전파되었습니다.'))
+            .catch(err => alert(err));
+        }
+
+        // 실시간 복합 결합 데이터 처리 파이프라인
         db.collection('system').doc('liveState').onSnapshot(liveDoc => {
             const currentLiveId = liveDoc.exists ? String(liveDoc.data().liveSpeechId) : null;
 
@@ -76,8 +84,8 @@
                     myHostedSpeeches.forEach(s => {
                         const isLiveNow = (currentLiveId === String(s.id));
                         const liveActionBtn = isLiveNow 
-                            ? `<button onclick="stopLiveSpeech()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⏹️ 전역 라이브 방송 강제 종료</button>`
-                            : `<button onclick="startLiveSpeech(${s.id})" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⚡ 실시간 라이브 무대 연동 On</button>`;
+                            ? `<button class="btn-live-stop" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⏹️ 전역 라이브 방송 강제 종료</button>`
+                            : `<button class="btn-live-start" data-id="${s.id}" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">⚡ 실시간 라이브 무대 연동 On</button>`;
 
                         hostedUl.innerHTML += `
                             <li>
@@ -89,18 +97,20 @@
             });
         });
 
-        // 전역 실시간 라이브 트리거 구동 (전체 접속 청중 스마트폰 화면 동시 폭파용)
-        function startLiveSpeech(id) {
-            db.collection('system').doc('liveState').set({ liveSpeechId: Number(id) })
-            .then(() => alert('🔥 클라우드 실시간 채널 고정 완료!\n전체 청중 디바이스 메인 스크롤 상단에 본 발표가 긴급 라이브 배너로 즉시 동기화 노출됩니다.'))
-            .catch(err => alert(err));
-        }
+        // 마이페이지 전용 버튼 이벤트 위임 및 바인딩
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('navLogoHome')?.addEventListener('click', () => window.location.href='FK.html');
+            document.getElementById('btnBackToMain')?.addEventListener('click', () => window.location.href='FK.html');
 
-        function stopLiveSpeech() {
-            db.collection('system').doc('liveState').set({ liveSpeechId: null })
-            .then(() => alert('⏹️ 라이브 방송 종료 처리가 즉시 전파되었습니다.'))
-            .catch(err => alert(err));
-        }
+            document.getElementById('hostedList')?.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-live-start')) {
+                    const id = e.target.getAttribute('data-id');
+                    startLiveSpeech(id);
+                } else if (e.target.classList.contains('btn-live-stop')) {
+                    stopLiveSpeech();
+                }
+            });
+        });
 
         // 마이페이지 AI 페르소나 연산 통합 엔진
         db.collection('feedbacks').where('reviewer', '==', currentUser.id).get().then(snap => {

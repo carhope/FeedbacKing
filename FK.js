@@ -1,22 +1,14 @@
 // =========================================================================
 // [Firebase 클라우드 연동 환경 설정] 
-// 구글 콘솔에서 프로젝트 개설 후 발급받은 본인의 구성 값(Config)을 아래 적어넣으시면 즉시 전 세계 공유화가 진행됩니다.
 // =========================================================================
-const firebaseConfig = {
-    apiKey: "AIzaSyA1...",
-    authDomain: "feedbacking-XXXXX.firebaseapp.com",
-    projectId: "feedbacking-XXXXX",
-    storageBucket: "feedbacking-XXXXX.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:12345:web:abcd"
-};
-// Firebase 인스턴스 초기화 보호벽
+import { firebaseConfig } from './config.js';
+
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
 
-let speechList = []; // 실시간 메모리 동기화 어레이
+let speechList = []; 
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 let currentLiveId = null;
 
@@ -28,7 +20,6 @@ function GoToPage(pageURL){
 // [실시간 핵심 데이터 동기화 엔진] Firebase 실시간 이벤트 리스너 통합 연동
 // =========================================================================
 function initRealtimeSync() {
-    // 1. 발표 목록 컬렉션 감시 (추가, 수정, 삭제 발생 시 자동 화면 리랜더링)
     db.collection('speeches').orderBy('id', 'asc').onSnapshot(snapshot => {
         speechList = [];
         snapshot.forEach(doc => {
@@ -37,7 +28,6 @@ function initRealtimeSync() {
         renderSpeeches();
     }, error => console.error("발표 스트리밍 오류:", error));
 
-    // 2. 전역 실시간 라이브 제어 타워 감시
     db.collection('system').doc('liveState').onSnapshot(doc => {
         if (doc.exists) {
             currentLiveId = doc.data().liveSpeechId || null;
@@ -79,7 +69,6 @@ function checkLiveBanner() {
     }
 }
 
-// 가입 절차가 필요 없는 초경량 식별용 인증 UI 체계
 function promptLogin() {
     const id = prompt("아이디를 입력하세요 (별도 가입 없이 즉시 공유화 계정 활성화)");
     if (!id) return;
@@ -140,9 +129,6 @@ function toggleAuthFields() {
     passwordFields.style.display = (authType === 'password') ? 'flex' : 'none';
 }
 
-// =========================================================================
-// [데이터 업로드] 로컬스토리지가 아닌 Firebase 클라우드 DB로 발표 안전 저장
-// =========================================================================
 function submitSpeech() {
     const title = document.getElementById('regTitle').value.trim();
     const speaker = document.getElementById('regSpeaker').value.trim();
@@ -150,7 +136,7 @@ function submitSpeech() {
     const dateTime = document.getElementById('regDateTime').value;
     const content = document.getElementById('regContent').value.trim();
     const authType = document.getElementById('regAuthType').value;
-    const presenterNote = document.getElementById('regPresenterNote').value.trim(); // 한마디 추출
+    const presenterNote = document.getElementById('regPresenterNote').value.trim();
 
     if (!title || !speaker || !location || !dateTime || !content) {
         alert('발표 핵심 기본 명세를 전부 채워주셔야 무대 배포가 가능합니다!');
@@ -190,7 +176,6 @@ function submitSpeech() {
         ...authData 
     };
 
-    // Firebase Firestore에 Document 트랜잭션 전송
     db.collection('speeches').add(newSpeech)
     .then(() => {
         closeModal();
@@ -215,7 +200,7 @@ function resetModalInputs() {
 }
 
 // =========================================================================
-// [실시간 리랜더링 및 삭제 제어] 내 글에만 쓰레기통 아이콘 바인딩
+// [실시간 리랜더링 및 위임 이벤트 바인딩]
 // =========================================================================
 function renderSpeeches(list = speechList) {
     const container = document.getElementById('spechesContainer');
@@ -236,11 +221,10 @@ function renderSpeeches(list = speechList) {
         if(speech.authType === 'quiz') badge = "📺 영상 퀴즈";
         if(speech.authType === 'password') badge = "🔒 현장 암호";
 
-        // [추가 기능 2] 소유자 전용 삭제 버튼 바인딩 처리 문맥
         let deleteBtnHtml = '';
         if (currentUser && speech.owner === currentUser.id) {
             deleteBtnHtml = `
-                <button class="btn-delete" onclick="deleteSpeech('${speech.firestoreId}', ${speech.id})" style="position:absolute; top:15px; right:15px;" title="이 발표 세션 영구 삭제">
+                <button class="btn-delete dynamic-delete" data-firestore-id="${speech.firestoreId}" data-numeric-id="${speech.id}" style="position:absolute; top:15px; right:15px;" title="이 발표 세션 영구 삭제">
                     🗑️
                 </button>`;
         }
@@ -248,12 +232,12 @@ function renderSpeeches(list = speechList) {
         let actionButton = '';
         if (currentUser && speech.owner === currentUser.id) {
             actionButton = `
-                <button onclick="GoToPage('FK_Dashboard.html?id=${speech.id}')" style="margin-top:15px; background-color:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">
+                <button class="btn-action-style dynamic-action" data-url="FK_Dashboard.html?id=${speech.id}" style="background-color:#10b981; color:white;">
                     📊 실시간 대시보드 리포트 열기
                 </button>`;
         } else {
             actionButton = `
-                <button onclick="GoToPage('FK_GiveFeedback.html?id=${speech.id}')" style="margin-top:15px; background-color:#111827; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.backgroundColor='#10b981'" onmouseout="this.style.backgroundColor='#111827'">
+                <button class="btn-action-style dynamic-action" data-url="FK_GiveFeedback.html?id=${speech.id}" style="background-color:#111827; color:white;">
                     피드백 참여하기
                 </button>`;
         }
@@ -280,14 +264,11 @@ function renderSpeeches(list = speechList) {
     checkLiveBanner();
 }
 
-// [추가 기능 2] 발표 세션 영구 소멸 및 종속 데이터 크러시 예방 처리
 function deleteSpeech(firestoreId, numericId) {
     if (!confirm("발표를 영구 삭제하시겠습니까?\n이 발표 세션에 청중들이 기록한 피드백 보고서 정보 데이터도 함께 클라우드에서 말소 처리됩니다.")) return;
     
-    // 발표 세션 본체 삭제
     db.collection('speeches').doc(firestoreId).delete()
     .then(() => {
-        // 혹시 라이브 중이었던 연설 세션이라면 전역 라이브 깃발도 자동 초기화 폭파
         if(String(numericId) === String(currentLiveId)) {
             db.collection('system').doc('liveState').delete();
         }
@@ -321,7 +302,41 @@ function resetSearch() {
     renderSpeeches();
 }
 
-window.onload = function() { 
+// =========================================================================
+// [프로 개발자 규격: 중앙 집중형 이벤트 청취 통제소]
+// =========================================================================
+window.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
-    initRealtimeSync(); // 실시간 소켓 파이프라인 오픈
-};
+    initRealtimeSync();
+
+    // 1. 고정 엘리먼트 정적 바인딩 파트
+    document.getElementById('logoHeader')?.addEventListener('click', () => window.location.reload());
+    document.getElementById('navHome')?.addEventListener('click', () => GoToPage('FK.html'));
+    document.getElementById('navRegister')?.addEventListener('click', checkLoginAndRegister);
+    document.getElementById('navIntroduce')?.addEventListener('click', () => GoToPage('FK_introduce.html'));
+    document.getElementById('navMyPage')?.addEventListener('click', () => GoToPage('FK_MyPage.html'));
+    document.getElementById('btnLogin')?.addEventListener('click', promptLogin);
+    document.getElementById('btnLogout')?.addEventListener('click', logout);
+    document.getElementById('btnSearch')?.addEventListener('click', searchSpeeches);
+    document.getElementById('btnReset')?.addEventListener('click', resetSearch);
+    document.getElementById('btnSubmitSpeech')?.addEventListener('click', submitSpeech);
+    document.getElementById('btnCloseModal')?.addEventListener('click', closeModal);
+    document.getElementById('regAuthType')?.addEventListener('change', toggleAuthFields);
+
+    // 2. 동적 엘리먼트 위임(Delegation) 감시 파트
+    document.getElementById('spechesContainer')?.addEventListener('click', (e) => {
+        const deleteTarget = e.target.closest('.dynamic-delete');
+        if (deleteTarget) {
+            const fId = deleteTarget.getAttribute('data-firestore-id');
+            const nId = deleteTarget.getAttribute('data-numeric-id');
+            deleteSpeech(fId, nId);
+            return;
+        }
+
+        const actionTarget = e.target.closest('.dynamic-action');
+        if (actionTarget) {
+            const targetUrl = actionTarget.getAttribute('data-url');
+            GoToPage(targetUrl);
+        }
+    });
+});
