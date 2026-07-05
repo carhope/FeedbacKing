@@ -41,7 +41,7 @@
     <p>청중은 참여 코드를 입력하거나 발표를 검색해 별점과 피드백을 남길 수 있습니다.</p>
     <p>발표자는 별점 평균, 항목별 점수, 피드백 목록을 한눈에 확인할 수 있습니다.</p>
     <p>피드백커가 자신의 피드백을 AI에게 분석받아 발표를 한번더 remind할 수 있습니다.</p>
-    <strong>발표자는 자신의 발표 피드백을 종합하여 AI 분석 리포트로 자신의 발표를 연구하고 개선할 수 있습니다.</strong>
+    <p><strong>발표자는 자신의 발표 피드백을 종합하여 AI 분석 리포트로 자신의 발표를 연구하고 개선할 수 있습니다.</strong></p>
 
     <h3>주요기능 핵심 3가지!</h3>
     <!-- 직접만든 표 -->
@@ -59,7 +59,7 @@
                 🔒 허수 방지 청중 인증 시스템
             </th>
             <td>
-                무분별한 테러나 허수 피드백을 막기 위해 [온라인용 영상 퀴즈 인증]과 [오프라인 현장 암호 인증] 방식을 도입 데이터의 신뢰성을 극대화
+                무분별한 테러나 허수 피드백을 막기 위해 <mark>[온라인용 영상 퀴즈 인증]</mark>과 <mark>[오프라인 현장 암호 인증]</mark> 방식 도입 데이터 신뢰성 극대화
             </td>
 
         </tr>
@@ -68,7 +68,7 @@
                 ⚡️ 프론트엔드 최적화 가성비 AI 분석
             </th>
             <td>
-                서버 비용과 느린 API 호출 없이, 순수 자바스크립트의 규칙 기반 알고리즘과 문자열 슬라이싱 트릭을 통해 0초 만에 청중의 성향(천사표, 비평가 등)을 도출하고 문맥 요약 리포트를 가공해 내는 초경량 UX
+                서버 비용과 느린 API 호출 없이, 순수 자바스크립트의 규칙 기반 알고리즘과 문자열 슬라이싱 트릭을 통해 0초 만에 청중의 성향(천사표, 비평가 등)을 도출, 문맥 요약 리포트를 가공해 내는 초경량 UX
             </td>
         </tr>
     </table>
@@ -83,5 +83,68 @@
     <p>FeedbacKing은 발표자가 더 나은 발표자로 성장할 수 있도록 돕는 피드백 플랫폼입니다.</p>
     </div>
     <script type="module" src="FK.js"></script>
+
+    <script type="module">
+        window.addEventListener('DOMContentLoaded', () => {
+            // 로고 클릭 시 메인으로
+            const logo = document.getElementById('logoHeader');
+            if (logo) {
+                logo.addEventListener('click', () => {
+                    window.location.href = "FK.html";
+                });
+            }
+
+            // Introduction 버튼 클릭 시 (현재 페이지 새로고침 혹은 유지)
+            const navIntroduce = document.getElementById('navIntroduce');
+            if (navIntroduce) {
+                navIntroduce.addEventListener('click', () => {
+                    window.location.href = 'FK_introduce.html';
+                });
+            }
+
+            // 발표 광장 버튼 클릭 시 메인으로
+            const navHome = document.getElementById('navHome');
+            if (navHome) {
+                navHome.addEventListener('click', () => {
+                    window.location.href = "FK.html";
+                });
+            }
+
+            // 마이페이지 버튼 클릭 시 이동 (추가 구현)
+            const navMyPage = document.getElementById('navMyPage');
+            if (navMyPage) {
+                navMyPage.addEventListener('click', () => {
+                    window.location.href = "FK_MyPage.html";
+                });
+            }
+
+            // ---------------------------------------------
+            // 로그인 상태 동적 반영 파트 (오타 및 ID 매칭 수정)
+            // ---------------------------------------------
+            const currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+            const welcomeMsg = document.getElementById('welcomeMsg');
+            const btnLogin = document.getElementById('btnLogin');
+            const btnLogout = document.getElementById('btnLogout');
+
+            if (currentUser) {
+                if (welcomeMsg) welcomeMsg.innerText = `👑 ${currentUser.id} 피드백커님 환영합니다!`;
+                if (btnLogin) btnLogin.style.display = 'none';
+                if (btnLogout) btnLogout.style.display = 'block';
+            } else {
+                if (welcomeMsg) welcomeMsg.innerText = '';
+                if (btnLogin) btnLogin.style.display = 'block';
+                if (btnLogout) btnLogout.style.display = 'none';
+            }
+
+            // 로그아웃 이벤트 바인딩
+            if (btnLogout) {
+                btnLogout.addEventListener('click', () => {
+                    localStorage.removeItem('currentUser');
+                    alert('로그아웃 되었습니다.');
+                    window.location.reload();
+                });
+            }
+        });
+    </script>
 </body>
 </html>

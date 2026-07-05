@@ -51,7 +51,14 @@ body {
     background-color: #10b981 !important; /* 타이틀과 맞춘 에메랄드 포인트 */
 }
 .main_introduce h3{
-    
+    color :#10b981;
+    margin-left: 40px;
+}
+.main_introduce p{
+    margin-left:40px;
+}
+.main_introduce table{
+    margin-left:40px;
 }
 
 /* 구분선 제거 (내비바에 그림자가 있어서 없는 게 더 깔끔합니다) */
