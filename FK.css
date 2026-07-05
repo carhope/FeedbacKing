@@ -50,6 +50,9 @@ body {
     color: #ffffff !important;
     background-color: #10b981 !important; /* 타이틀과 맞춘 에메랄드 포인트 */
 }
+.main_introduce h3{
+    
+}
 
 /* 구분선 제거 (내비바에 그림자가 있어서 없는 게 더 깔끔합니다) */
 hr {
