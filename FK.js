@@ -96,6 +96,8 @@ function closeLoginModal() {
     }
 }
 
+window.closeLoginModal = closeLoginModal;
+
 // 3. 진짜 로그인 버튼이 눌렸을 때 실행되는 핵심 실시간 검증 엔진
 async function handleLoginSubmit() {
     const idInput = document.getElementById('loginIdInput');
