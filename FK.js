@@ -74,7 +74,11 @@ function promptLogin() {
     if (!id) return;
     const pw = prompt("비밀번호를 입력하세요");
     if (!pw) return;
-
+    /* ex) if pw !=  db_pw {
+            alert('비밀번호가 틀렸습니다');
+            return false;
+          }
+    */
     currentUser = { id: id.trim(), password: pw.trim() };
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     alert(`클라우드 동기화 성공: ${currentUser.id}님 반갑습니다!`);
