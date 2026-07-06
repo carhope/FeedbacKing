@@ -8,6 +8,9 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
+// 🔥 발표장 방화벽 프리패스를 위한 안정성 강화 코드 추가
+db.settings({ experimentalForceLongPolling: true });
+
 let speechList = []; 
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 let currentLiveId = null;
@@ -61,6 +64,7 @@ function checkLiveBanner() {
     if (currentUser && liveSpeech.owner === currentUser.id) {
         liveBtn.innerText = "📊 실시간 결과 대시보드 보기";
         liveBtn.style.backgroundColor = "#10b981"; 
+        // 🛠️ 대소문자 주소 통일 완료 (DashBoard -> Dashboard)
         liveBtn.onclick = () => GoToPage(`FK_Dashboard.html?id=${liveSpeech.id}`);
     } else {
         liveBtn.innerText = "지금 바로 피드백 참여하기";
@@ -69,21 +73,81 @@ function checkLiveBanner() {
     }
 }
 
+// =========================================================================
+// [🔐 업그레이드 로그인 및 모달 핸들러 파트]
+// =========================================================================
+
+// 1. 기존 prompt 대신 HTML 모달 창을 열어주는 제어소
 function promptLogin() {
-    const id = prompt("아이디를 입력하세요 (별도 가입 없이 즉시 공유화 계정 활성화)");
-    if (!id) return;
-    const pw = prompt("비밀번호를 입력하세요");
-    if (!pw) return;
-    /* ex) if pw !=  db_pw {
-            alert('비밀번호가 틀렸습니다');
-            return false;
-          }
-    */
-    currentUser = { id: id.trim(), password: pw.trim() };
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    alert(`클라우드 동기화 성공: ${currentUser.id}님 반갑습니다!`);
-    updateAuthUI();
-    renderSpeeches();
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.style.display = 'flex';
+        document.getElementById('loginIdInput')?.focus(); // 열리자마자 아이디창 자동 포커스
+    }
+}
+
+// 2. 로그인 모달창 닫기 및 인풋 초기화
+function closeLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        document.getElementById('loginIdInput').value = '';
+        document.getElementById('loginPwInput').value = '';
+        loginModal.style.display = 'none';
+    }
+}
+
+// 3. 진짜 로그인 버튼이 눌렸을 때 실행되는 핵심 실시간 검증 엔진
+async function handleLoginSubmit() {
+    const idInput = document.getElementById('loginIdInput');
+    const pwInput = document.getElementById('loginPwInput');
+    if (!idInput || !pwInput) return;
+
+    const id = idInput.value.trim();
+    const pw = pwInput.value.trim();
+
+    // 🔍 빈 공간 체크 및 자동 마우스 커서 포커스 꽂기
+    if (!id) {
+        alert("아이디를 입력해 주세요.");
+        idInput.focus();
+        return;
+    }
+    if (!pw) {
+        alert("비밀번호를 입력해 주세요.");
+        pwInput.focus();
+        return;
+    }
+
+    try {
+        const userRef = db.collection('users').doc(id);
+        const userDoc = await userRef.get();
+
+        if (userDoc.exists) {
+            // [경우 A] 아이디가 존재할 때 ➡️ 철저한 비밀번호 매칭 검사
+            const userData = userDoc.data();
+            if (userData.password !== pw) {
+                alert("❌ 비밀번호가 틀렸습니다! 다시 확인해 주세요.");
+                pwInput.value = ''; // 적었던 비밀번호 초기화
+                pwInput.focus();    // 다시 치라고 커서 꽂기
+                return; // 로그인 프리패스 전면 차단
+            }
+        } else {
+            // [경우 B] 처음 만든 아이디일 때 ➡️ DB 가입 자동 연동
+            await userRef.set({ id: id, password: pw });
+            alert(`🎉 신규 피드백커 계정이 활성화되었습니다!`);
+        }
+
+        // 로그인 최종 통과 시 브라우저 세션 굽기
+        currentUser = { id: id, password: pw };
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        closeLoginModal();
+        updateAuthUI();
+        renderSpeeches();
+
+    } catch (error) {
+        console.error("로그인 연동 장애 발생:", error);
+        alert("네트워크 연결을 확인해 주세요.");
+    }
 }
 
 function logout() {
@@ -326,6 +390,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSubmitSpeech')?.addEventListener('click', submitSpeech);
     document.getElementById('btnCloseModal')?.addEventListener('click', closeModal);
     document.getElementById('regAuthType')?.addEventListener('change', toggleAuthFields);
+    
+    // 🔥 로그인 모달 내 '로그인/연결' 전용 버튼 이벤트 동적 바인딩 추가
+    document.getElementById('btnSubmitLogin')?.addEventListener('click', handleLoginSubmit);
 
     // 2. 동적 엘리먼트 위임(Delegation) 감시 파트
     document.getElementById('spechesContainer')?.addEventListener('click', (e) => {

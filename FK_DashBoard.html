@@ -50,7 +50,10 @@
         import { firebaseConfig } from './config.js';
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        // 파이어베이스 DB 선언 바로 아래에 추가
 
+        // 🔥 발표장 방화벽 프리패스를 위한 절대 방패 코드!
+        db.settings({ experimentalForceLongPolling: true });
         const params = new URLSearchParams(window.location.search);
         const currentId = Number(params.get('id'));
 
