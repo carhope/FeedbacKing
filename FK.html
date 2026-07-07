@@ -36,7 +36,7 @@
         <div style="display: flex; align-items: center; gap: 15px;">
             <span style="background: #ef4444; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; animation: liveBlink 1s infinite; letter-spacing: 1px;">🔥 LIVE</span>
             <div style="color: white;">
-                <span style="font-size: 12px; color: #a7f3d0; font-weight: bold; display: block; margin-bottom: 2px;">현재 무대에서 실시간 라이브 피드백 진행 중!</span>
+                <span style="font-size: 12px; color: #a7f3d0; font-weight: bold; display: block; margin-bottom: 2px;">실시간 라이브 피드백 진행 중</span>
                 <strong id="liveTitle" style="font-size: 18px; color: #ffffff;">발표 제목</strong>
             </div>
         </div>
@@ -72,6 +72,51 @@
         </div>
     </div>
 
+    <div id="registerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 420px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px; margin: auto;">
+            <h3 style="margin: 0; color: #10b981; text-align: center;">새 발표 무대 등록</h3>
+            
+            <label style="font-size: 12px; font-weight: bold; color: #4b5563;">📊 발표 제목</label>
+            <input type="text" id="regTitle" placeholder="발표 제목을 입력하세요" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #4b5563;">👤 발표자 이름</label>
+            <input type="text" id="regSpeaker" placeholder="발표자 명을 입력하세요" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #4b5563;">📍 발표 장소</label>
+            <input type="text" id="regLocation" placeholder="예: 상상관 3층 대강당, Zoom 온라인" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #4b5563;">📅 일시 설정</label>
+            <input type="datetime-local" id="regDateTime" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #4b5563;">💡 발표자의 피드백 포커싱 (선택)</label>
+            <input type="text" id="regPresenterNote" placeholder="예: 디자인 레이아웃 위주로 피드백 부탁드립니다." style="padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #4b5563;">📝 발표 상세 내용</label>
+            <textarea id="regContent" placeholder="청중들이 참고할 핵심 시놉시스를 적어주세요" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; height: 60px; resize: none;"></textarea>
+            
+            <label style="font-size: 12px; font-weight: bold; color: #4b5563;">🔐 참여 인증 방식 선택</label>
+            <select id="regAuthType" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+                <option value="none">🔓 자유 참여 (인증 패스)</option>
+                <option value="quiz">📺 영상 시청 퀴즈 인증</option>
+                <option value="password">🔒 현장 암호 도어락 인증</option>
+            </select>
+            
+            <div id="authQuizFields" style="display: none; flex-direction: column; gap: 8px; background: #f9fafb; padding: 10px; border-radius: 4px;">
+                <input type="text" id="regYoutube" placeholder="유튜브 공유 링크 URL 주소" style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+                <input type="text" id="regQuizQuestion" placeholder="인증용 영상 질문 문제" style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+                <input type="text" id="regQuizAnswer" placeholder="질문의 정확한 정답" style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+            </div>
+            
+            <div id="authPasswordFields" style="display: none; flex-direction: column; gap: 8px; background: #f9fafb; padding: 10px; border-radius: 4px;">
+                <input type="password" id="regPassword" placeholder="현장 입장용 비밀번호 설정" style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="btnSubmitSpeech" style="flex: 1; background: #10b981; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">🚀 무대 배포하기</button>
+                <button id="btnCloseModal" style="background: #e5e7eb; color: #374151; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;">취소</button>
+            </div>
+        </div>
+    </div>
     <script type="module" src="FK.js"></script>
 </body>
 </html>

@@ -64,10 +64,10 @@ function checkLiveBanner() {
     if (currentUser && liveSpeech.owner === currentUser.id) {
         liveBtn.innerText = "📊 실시간 결과 대시보드 보기";
         liveBtn.style.backgroundColor = "#10b981"; 
-        // 🛠️ 대소문자 주소 통일 완료
-        liveBtn.onclick = () => GoToPage(`FK_Dashboard.html?id=${liveSpeech.id}`);
+        // 🛠️ 유저 지정 대문자 주소 사수 완료
+        liveBtn.onclick = () => GoToPage(`FK_DashBoard.html?id=${liveSpeech.id}`);
     } else {
-        liveBtn.innerText = "지금 바로 피드백 참여하기";
+        liveBtn.innerText = "바로 피드백 참여하기";
         liveBtn.style.backgroundColor = "#ef4444"; 
         liveBtn.onclick = () => GoToPage(`FK_GiveFeedback.html?id=${liveSpeech.id}`);
     }
@@ -162,7 +162,7 @@ function updateAuthUI() {
 
 function checkLoginAndRegister() {
     if (!currentUser) {
-        alert("무대에 발표를 등록하려면 먼저 로그인 체계를 활성화해 주세요!");
+        alert("무대에 발표를 등록하려면 먼저 로그인을 해 주세요!");
         promptLogin();
         return;
     }
@@ -170,7 +170,7 @@ function checkLoginAndRegister() {
     if (modal) {
         modal.style.display = 'flex'; 
     } else {
-        alert("HTML 에러: 'registerModal' ID를 가진 태그를 찾을 수 없습니다.");
+        alert("HTML 에러: 'registerModal' ID를 가진 태그를 찾을 수 없습니다. HTML을 확인해 주세요.");
     }
 }
 
@@ -190,7 +190,7 @@ function toggleAuthFields() {
     passwordFields.style.display = (authType === 'password') ? 'flex' : 'none';
 }
 
-// 🔥 에러 방어형으로 전면 리팩토링된 등록 엔진
+// 🔥 편리한 자동 순차 포커싱(.focus()) 시스템으로 리팩토링 완료!
 function submitSpeech() {
     try {
         const elements = {
@@ -203,10 +203,10 @@ function submitSpeech() {
             presenterNote: document.getElementById('regPresenterNote')
         };
 
-        // 🔍 HTML에 ID 오타가 있는지 검사하는 안전 장치
+        // 🔍 크래시 원천 차단용 안전장치
         for (const [key, el] of Object.entries(elements)) {
             if (!el) {
-                alert(`HTML 에러: 'reg${key.charAt(0).toUpperCase() + key.slice(1)}' ID를 가진 입력창이 없습니다. HTML을 확인해 주세요.`);
+                alert(`HTML 에러: 'reg${key.charAt(0).toUpperCase() + key.slice(1)}' ID를 가진 입력창이 태그 내에 존재하지 않습니다.`);
                 return;
             }
         }
@@ -219,30 +219,30 @@ function submitSpeech() {
         const authType = elements.authType.value;
         const presenterNote = elements.presenterNote.value.trim();
 
-        if (!title || !speaker || !location || !dateTime || !content) {
-            alert('발표 핵심 기본 명세를 전부 채워주셔야 무대 배포가 가능합니다!');
-            return;
-        }
+        // 🎯 순차별 빵꾸 체크 및 강제 커서 포커싱 마법
+        if (!title) { alert('발표 제목이 비어있습니다!'); elements.title.focus(); return; }
+        if (!speaker) { alert('발표 수행자명이 비어있습니다!'); elements.speaker.focus(); return; }
+        if (!location) { alert('발표가 이루어질 장소가 비어있습니다'); elements.location.focus(); return; }
+        if (!dateTime) { alert('발표 시작 정확한 날짜와 시각이 비어있습니다!'); elements.dateTime.focus(); return; }
+        if (!content) { alert('청중들을 위한 발표 핵심 요약 내용을 입력해 주세요!'); elements.content.focus(); return; }
 
         let authData = { authType: authType };
         if (authType === 'quiz') {
-            const youtube = document.getElementById('regYoutube')?.value.trim();
-            const question = document.getElementById('regQuizQuestion')?.value.trim();
-            const answer = document.getElementById('regQuizAnswer')?.value.trim();
-            if (!youtube || !question || !answer) {
-                alert('영상 인증 데이터 항목을 충실히 채워주십시오.');
-                return;
-            }
-            authData.youtube = youtube;
-            authData.quizQuestion = question;
-            authData.quizAnswer = answer;
+            const youtubeEl = document.getElementById('regYoutube');
+            const questionEl = document.getElementById('regQuizQuestion');
+            const answerEl = document.getElementById('regQuizAnswer');
+
+            if (!youtubeEl?.value.trim()) { alert('인증을 위한 유튜브 공유 주소(URL)를 입력해 주세요.'); youtubeEl?.focus(); return; }
+            if (!questionEl?.value.trim()) { alert('시청 확인용 인증 퀴즈 질문을 입력해 주세요.'); questionEl?.focus(); return; }
+            if (!answerEl?.value.trim()) { alert('퀴즈의 정답을 명확히 정의해 주세요.'); answerEl?.focus(); return; }
+
+            authData.youtube = youtubeEl.value.trim();
+            authData.quizQuestion = questionEl.value.trim();
+            authData.quizAnswer = answerEl.value.trim();
         } else if (authType === 'password') {
-            const password = document.getElementById('regPassword')?.value.trim();
-            if (!password) {
-                alert('오프라인 비밀번호 도어락 패스워드를 기재하십시오.');
-                return;
-            }
-            authData.password = password;
+            const passwordEl = document.getElementById('regPassword');
+            if (!passwordEl?.value.trim()) { alert('현장 수강생들을 위한 입장 비밀번호를 세팅해 주세요.'); passwordEl?.focus(); return; }
+            authData.password = passwordEl.value.trim();
         }
 
         const newSpeech = { 
@@ -261,12 +261,13 @@ function submitSpeech() {
         .then(() => {
             closeModal();
             resetModalInputs();
+            alert("🎉 성공적으로 새로운 발표 세션이 광장에 배포되었습니다!");
         })
         .catch(err => alert("클라우드 전송 실패: " + err));
 
     } catch (e) {
         console.error("등록 로직 크래시:", e);
-        alert("입력창 로드 중 에러가 발생했습니다. 개발자 도구 콘솔을 확인하세요.");
+        alert("입력 엔진 처리 도중 예기치 못한 에러가 발생했습니다.");
     }
 }
 
@@ -346,7 +347,6 @@ function renderSpeeches(list = speechList) {
     checkLiveBanner();
 }
 
-//머지 및 딜리트 기법
 function deleteSpeech(firestoreId, numericId) {
     if (!confirm("발표를 영구 삭제하시겠습니까?\n이 발표 세션에 청중들이 기록한 피드백 보고서 정보 데이터도 함께 클라우드에서 말소 처리됩니다.")) return;
     
@@ -392,7 +392,6 @@ window.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
     initRealtimeSync();
 
-    // 1. 고정 엘리먼트 정적 바인딩 파트
     document.getElementById('logoHeader')?.addEventListener('click', () => window.location.reload());
     document.getElementById('navHome')?.addEventListener('click', () => GoToPage('FK.html'));
     document.getElementById('navRegister')?.addEventListener('click', checkLoginAndRegister);
@@ -407,7 +406,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('regAuthType')?.addEventListener('change', toggleAuthFields);
     document.getElementById('btnSubmitLogin')?.addEventListener('click', handleLoginSubmit);
 
-    // 2. 동적 엘리먼트 위임(Delegation) 감시 파트
     document.getElementById('spechesContainer')?.addEventListener('click', (e) => {
         const deleteTarget = e.target.closest('.dynamic-delete');
         if (deleteTarget) {
@@ -425,7 +423,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// 🔥 [중요] HTML 상의 inline onclick/onchange 격리 버그 전면 차단 방어막
+// 🔥 HTML 상의 inline onclick/onchange 격리 버그 전면 차단 방어막
 window.closeLoginModal = closeLoginModal;
 window.closeModal = closeModal;
 window.checkLoginAndRegister = checkLoginAndRegister;
