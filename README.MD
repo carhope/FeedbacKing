@@ -40,14 +40,14 @@ JavaScript
 
 ## Backend
 ```txt
-Python Flask
+Firebase
 ```
 
 ## Development Tool
 ```txt
 VS Code
 ```
-
+## Vercel 로 간단하게 배포
 ---
 
 # 🖥 주요 기능

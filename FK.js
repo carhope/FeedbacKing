@@ -64,7 +64,7 @@ function checkLiveBanner() {
     if (currentUser && liveSpeech.owner === currentUser.id) {
         liveBtn.innerText = "📊 실시간 결과 대시보드 보기";
         liveBtn.style.backgroundColor = "#10b981"; 
-        // 🛠️ 대소문자 주소 통일 완료 (DashBoard -> Dashboard)
+        // 🛠️ 대소문자 주소 통일 완료
         liveBtn.onclick = () => GoToPage(`FK_Dashboard.html?id=${liveSpeech.id}`);
     } else {
         liveBtn.innerText = "지금 바로 피드백 참여하기";
@@ -77,16 +77,14 @@ function checkLiveBanner() {
 // [🔐 업그레이드 로그인 및 모달 핸들러 파트]
 // =========================================================================
 
-// 1. 기존 prompt 대신 HTML 모달 창을 열어주는 제어소
 function promptLogin() {
     const loginModal = document.getElementById('loginModal');
     if (loginModal) {
         loginModal.style.display = 'flex';
-        document.getElementById('loginIdInput')?.focus(); // 열리자마자 아이디창 자동 포커스
+        document.getElementById('loginIdInput')?.focus();
     }
 }
 
-// 2. 로그인 모달창 닫기 및 인풋 초기화
 function closeLoginModal() {
     const loginModal = document.getElementById('loginModal');
     if (loginModal) {
@@ -96,9 +94,6 @@ function closeLoginModal() {
     }
 }
 
-window.closeLoginModal = closeLoginModal;
-
-// 3. 진짜 로그인 버튼이 눌렸을 때 실행되는 핵심 실시간 검증 엔진
 async function handleLoginSubmit() {
     const idInput = document.getElementById('loginIdInput');
     const pwInput = document.getElementById('loginPwInput');
@@ -107,38 +102,26 @@ async function handleLoginSubmit() {
     const id = idInput.value.trim();
     const pw = pwInput.value.trim();
 
-    // 🔍 빈 공간 체크 및 자동 마우스 커서 포커스 꽂기
-    if (!id) {
-        alert("아이디를 입력해 주세요.");
-        idInput.focus();
-        return;
-    }
-    if (!pw) {
-        alert("비밀번호를 입력해 주세요.");
-        pwInput.focus();
-        return;
-    }
+    if (!id) { alert("아이디를 입력해 주세요."); idInput.focus(); return; }
+    if (!pw) { alert("비밀번호를 입력해 주세요."); pwInput.focus(); return; }
 
     try {
         const userRef = db.collection('users').doc(id);
         const userDoc = await userRef.get();
 
         if (userDoc.exists) {
-            // [경우 A] 아이디가 존재할 때 ➡️ 철저한 비밀번호 매칭 검사
             const userData = userDoc.data();
             if (userData.password !== pw) {
-                alert("❌ 비밀번호가 틀렸습니다! 다시 확인해 주세요.");
-                pwInput.value = ''; // 적었던 비밀번호 초기화
-                pwInput.focus();    // 다시 치라고 커서 꽂기
-                return; // 로그인 프리패스 전면 차단
+                alert("❌ 아이디가 이미 존재하거나 비밀번호가 틀렸습니다! 다시 확인해 주세요.");
+                pwInput.value = '';
+                pwInput.focus();
+                return;
             }
         } else {
-            // [경우 B] 처음 만든 아이디일 때 ➡️ DB 가입 자동 연동
             await userRef.set({ id: id, password: pw });
             alert(`🎉 신규 피드백커 계정이 활성화되었습니다!`);
         }
 
-        // 로그인 최종 통과 시 브라우저 세션 굽기
         currentUser = { id: id, password: pw };
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
@@ -183,89 +166,118 @@ function checkLoginAndRegister() {
         promptLogin();
         return;
     }
-    document.getElementById('registerModal').style.display = 'flex'; 
+    const modal = document.getElementById('registerModal');
+    if (modal) {
+        modal.style.display = 'flex'; 
+    } else {
+        alert("HTML 에러: 'registerModal' ID를 가진 태그를 찾을 수 없습니다.");
+    }
 }
 
 function closeModal() { 
-    document.getElementById('registerModal').style.display = 'none'; 
+    const modal = document.getElementById('registerModal');
+    if (modal) modal.style.display = 'none'; 
 }
 
 function toggleAuthFields() {
-    const authType = document.getElementById('regAuthType').value;
+    const authTypeEl = document.getElementById('regAuthType');
     const quizFields = document.getElementById('authQuizFields');
     const passwordFields = document.getElementById('authPasswordFields');
+    if (!authTypeEl || !quizFields || !passwordFields) return;
 
+    const authType = authTypeEl.value;
     quizFields.style.display = (authType === 'quiz') ? 'flex' : 'none';
     passwordFields.style.display = (authType === 'password') ? 'flex' : 'none';
 }
 
+// 🔥 에러 방어형으로 전면 리팩토링된 등록 엔진
 function submitSpeech() {
-    const title = document.getElementById('regTitle').value.trim();
-    const speaker = document.getElementById('regSpeaker').value.trim();
-    const location = document.getElementById('regLocation').value.trim();
-    const dateTime = document.getElementById('regDateTime').value;
-    const content = document.getElementById('regContent').value.trim();
-    const authType = document.getElementById('regAuthType').value;
-    const presenterNote = document.getElementById('regPresenterNote').value.trim();
+    try {
+        const elements = {
+            title: document.getElementById('regTitle'),
+            speaker: document.getElementById('regSpeaker'),
+            location: document.getElementById('regLocation'),
+            dateTime: document.getElementById('regDateTime'),
+            content: document.getElementById('regContent'),
+            authType: document.getElementById('regAuthType'),
+            presenterNote: document.getElementById('regPresenterNote')
+        };
 
-    if (!title || !speaker || !location || !dateTime || !content) {
-        alert('발표 핵심 기본 명세를 전부 채워주셔야 무대 배포가 가능합니다!');
-        return;
-    }
+        // 🔍 HTML에 ID 오타가 있는지 검사하는 안전 장치
+        for (const [key, el] of Object.entries(elements)) {
+            if (!el) {
+                alert(`HTML 에러: 'reg${key.charAt(0).toUpperCase() + key.slice(1)}' ID를 가진 입력창이 없습니다. HTML을 확인해 주세요.`);
+                return;
+            }
+        }
 
-    let authData = { authType: authType };
-    if (authType === 'quiz') {
-        const youtube = document.getElementById('regYoutube').value.trim();
-        const question = document.getElementById('regQuizQuestion').value.trim();
-        const answer = document.getElementById('regQuizAnswer').value.trim();
-        if (!youtube || !question || !answer) {
-            alert('영상 인증 데이터 항목을 충실히 채워주십시오.');
+        const title = elements.title.value.trim();
+        const speaker = elements.speaker.value.trim();
+        const location = elements.location.value.trim();
+        const dateTime = elements.dateTime.value;
+        const content = elements.content.value.trim();
+        const authType = elements.authType.value;
+        const presenterNote = elements.presenterNote.value.trim();
+
+        if (!title || !speaker || !location || !dateTime || !content) {
+            alert('발표 핵심 기본 명세를 전부 채워주셔야 무대 배포가 가능합니다!');
             return;
         }
-        authData.youtube = youtube;
-        authData.quizQuestion = question;
-        authData.quizAnswer = answer;
-    } else if (authType === 'password') {
-        const password = document.getElementById('regPassword').value.trim();
-        if (!password) {
-            alert('오프라인 비밀번호 도어락 패스워드를 기재하십시오.');
-            return;
+
+        let authData = { authType: authType };
+        if (authType === 'quiz') {
+            const youtube = document.getElementById('regYoutube')?.value.trim();
+            const question = document.getElementById('regQuizQuestion')?.value.trim();
+            const answer = document.getElementById('regQuizAnswer')?.value.trim();
+            if (!youtube || !question || !answer) {
+                alert('영상 인증 데이터 항목을 충실히 채워주십시오.');
+                return;
+            }
+            authData.youtube = youtube;
+            authData.quizQuestion = question;
+            authData.quizAnswer = answer;
+        } else if (authType === 'password') {
+            const password = document.getElementById('regPassword')?.value.trim();
+            if (!password) {
+                alert('오프라인 비밀번호 도어락 패스워드를 기재하십시오.');
+                return;
+            }
+            authData.password = password;
         }
-        authData.password = password;
+
+        const newSpeech = { 
+            id: Date.now(), 
+            owner: currentUser ? currentUser.id : 'anonymous',
+            title, 
+            speaker, 
+            location, 
+            dateTime, 
+            content, 
+            presenterNote: presenterNote || "특별히 정해진 피드백 가이드가 없습니다. 자유롭고 유익한 한줄평을 부탁드립니다!",
+            ...authData 
+        };
+
+        db.collection('speeches').add(newSpeech)
+        .then(() => {
+            closeModal();
+            resetModalInputs();
+        })
+        .catch(err => alert("클라우드 전송 실패: " + err));
+
+    } catch (e) {
+        console.error("등록 로직 크래시:", e);
+        alert("입력창 로드 중 에러가 발생했습니다. 개발자 도구 콘솔을 확인하세요.");
     }
-
-    const newSpeech = { 
-        id: Date.now(), 
-        owner: currentUser ? currentUser.id : 'anonymous',
-        title, 
-        speaker, 
-        location, 
-        dateTime, 
-        content, 
-        presenterNote: presenterNote || "특별히 정해진 피드백 가이드가 없습니다. 자유롭고 유익한 한줄평을 부탁드립니다!",
-        ...authData 
-    };
-
-    db.collection('speeches').add(newSpeech)
-    .then(() => {
-        closeModal();
-        resetModalInputs();
-    })
-    .catch(err => alert("클라우드 전송 실패: " + err));
 }
 
 function resetModalInputs() {
-    document.getElementById('regTitle').value = '';
-    document.getElementById('regSpeaker').value = '';
-    document.getElementById('regLocation').value = '';
-    document.getElementById('regDateTime').value = '';
-    document.getElementById('regContent').value = '';
-    document.getElementById('regPresenterNote').value = '';
-    document.getElementById('regAuthType').value = 'none';
-    document.getElementById('regYoutube').value = '';
-    document.getElementById('regQuizQuestion').value = '';
-    document.getElementById('regQuizAnswer').value = '';
-    document.getElementById('regPassword').value = '';
+    const fields = ['regTitle', 'regSpeaker', 'regLocation', 'regDateTime', 'regContent', 'regPresenterNote', 'regYoutube', 'regQuizQuestion', 'regQuizAnswer', 'regPassword'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const authType = document.getElementById('regAuthType');
+    if (authType) authType.value = 'none';
     toggleAuthFields();
 }
 
@@ -302,7 +314,7 @@ function renderSpeeches(list = speechList) {
         let actionButton = '';
         if (currentUser && speech.owner === currentUser.id) {
             actionButton = `
-                <button class="btn-action-style dynamic-action" data-url="FK_Dashboard.html?id=${speech.id}" style="background-color:#10b981; color:white;">
+                <button class="btn-action-style dynamic-action" data-url="FK_DashBoard.html?id=${speech.id}" style="background-color:#10b981; color:white;">
                     📊 실시간 대시보드 리포트 열기
                 </button>`;
         } else {
@@ -334,6 +346,7 @@ function renderSpeeches(list = speechList) {
     checkLiveBanner();
 }
 
+//머지 및 딜리트 기법
 function deleteSpeech(firestoreId, numericId) {
     if (!confirm("발표를 영구 삭제하시겠습니까?\n이 발표 세션에 청중들이 기록한 피드백 보고서 정보 데이터도 함께 클라우드에서 말소 처리됩니다.")) return;
     
@@ -392,8 +405,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSubmitSpeech')?.addEventListener('click', submitSpeech);
     document.getElementById('btnCloseModal')?.addEventListener('click', closeModal);
     document.getElementById('regAuthType')?.addEventListener('change', toggleAuthFields);
-    
-    // 🔥 로그인 모달 내 '로그인/연결' 전용 버튼 이벤트 동적 바인딩 추가
     document.getElementById('btnSubmitLogin')?.addEventListener('click', handleLoginSubmit);
 
     // 2. 동적 엘리먼트 위임(Delegation) 감시 파트
@@ -413,3 +424,10 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// 🔥 [중요] HTML 상의 inline onclick/onchange 격리 버그 전면 차단 방어막
+window.closeLoginModal = closeLoginModal;
+window.closeModal = closeModal;
+window.checkLoginAndRegister = checkLoginAndRegister;
+window.submitSpeech = submitSpeech;
+window.toggleAuthFields = toggleAuthFields;
